@@ -6,7 +6,8 @@ export const HomePage = () => {
   return (
     <div className="space-y-10">
       <section className="grid gap-10 md:grid-cols-[3fr,2fr] md:items-center">
-        <div>
+        <div className="relative">
+          <div className="pointer-events-none absolute -left-10 -top-10 h-32 w-32 rounded-full bg-brand-500/20 blur-3xl" />
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-400">
             Boutique Event Venue
           </p>
@@ -52,7 +53,7 @@ export const HomePage = () => {
         <Card
           title="Upcoming Highlights"
           subtitle="A glimpse of what your guests will experience."
-          className="border-brand-500/40 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
+          className="border-brand-500/40"
         >
           <div className="space-y-4 text-xs text-slate-200">
             <div className="flex items-start justify-between">

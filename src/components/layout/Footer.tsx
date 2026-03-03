@@ -1,6 +1,6 @@
 export const Footer = () => {
   return (
-    <footer className="mt-8 border-t border-slate-800 bg-slate-950/80">
+    <footer className="neu-footer-shell mt-8">
       <div className="page-container flex flex-col items-center justify-between space-y-3 py-4 text-xs text-slate-400 md:flex-row md:space-y-0">
         <p>
           © {new Date().getFullYear()} Elegance Venue. All rights reserved.

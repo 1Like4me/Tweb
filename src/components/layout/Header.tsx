@@ -20,11 +20,11 @@ export const Header = () => {
   const navLinkInactive = 'text-slate-200';
 
   return (
-    <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
+    <header className="neu-header-shell">
       <div className="page-container flex items-center justify-between py-3">
         <div className="flex items-center space-x-8">
           <Link to="/" className="flex items-center space-x-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500 text-slate-950 shadow-lg shadow-brand-900/70">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 via-brand-500 to-brand-600 text-slate-950 shadow-[var(--neu-shadow-soft)]">
               <span className="text-lg font-bold">E</span>
             </div>
             <div className="leading-tight">
@@ -147,7 +147,7 @@ export const Header = () => {
 
         <button
           type="button"
-          className="inline-flex items-center justify-center rounded-md border border-slate-700 bg-slate-900 p-2 text-slate-200 hover:bg-slate-800 md:hidden"
+          className="inline-flex items-center justify-center rounded-2xl border border-slate-700/70 bg-slate-900/80 p-2 text-slate-200 shadow-[var(--neu-shadow-soft)] hover:bg-slate-800 md:hidden"
           onClick={() => setOpen((prev) => !prev)}
         >
           <span className="sr-only">Open main menu</span>
@@ -159,7 +159,7 @@ export const Header = () => {
         </button>
       </div>
       {open && (
-        <div className="border-t border-slate-800 bg-slate-950/95 md:hidden">
+        <div className="border-t border-slate-900/80 bg-slate-950/95 md:hidden">
           <div className="page-container space-y-2 pb-4 pt-2">
             <nav className="flex flex-col space-y-1">
               <NavLink

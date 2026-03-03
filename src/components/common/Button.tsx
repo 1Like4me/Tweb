@@ -23,17 +23,17 @@ export const Button = ({
   ...rest
 }: ButtonProps) => {
   const base =
-    'inline-flex items-center justify-center rounded-lg font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:opacity-60 disabled:cursor-not-allowed';
+    'inline-flex items-center justify-center rounded-2xl font-medium transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/80 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:opacity-60 disabled:cursor-not-allowed shadow-[var(--neu-shadow-soft)] active:shadow-[var(--neu-shadow-inset)]';
 
   const variants: Record<ButtonVariant, string> = {
     primary:
-      'bg-brand-500 text-slate-950 hover:bg-brand-400 active:bg-brand-600 shadow-lg shadow-brand-900/60',
+      'bg-gradient-to-br from-brand-400 via-brand-500 to-brand-600 text-slate-950 hover:from-brand-300 hover:via-brand-400 hover:to-brand-600',
     secondary:
-      'bg-slate-800 text-slate-50 hover:bg-slate-700 border border-slate-600',
+      'bg-gradient-to-br from-slate-800 to-slate-900 text-slate-50 hover:from-slate-700 hover:to-slate-900 border border-slate-600/70',
     ghost:
-      'bg-transparent text-slate-100 hover:bg-slate-900 border border-transparent',
+      'bg-transparent text-slate-100 hover:bg-slate-900/70 border border-transparent shadow-none active:shadow-[var(--neu-shadow-inset)]',
     danger:
-      'bg-red-600 text-white hover:bg-red-500 active:bg-red-700 shadow-lg shadow-red-900/60'
+      'bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white hover:from-red-400 hover:via-red-500 hover:to-red-700'
   };
 
   const sizes: Record<ButtonSize, string> = {
