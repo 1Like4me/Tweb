@@ -7,16 +7,11 @@ export const HomePage = () => {
     <div className="space-y-10">
       <section className="grid gap-10 md:grid-cols-[3fr,2fr] md:items-center">
         <div className="relative">
-          <div className="pointer-events-none absolute -left-10 -top-10 h-32 w-32 rounded-full bg-brand-500/20 blur-3xl" />
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-400">
             Boutique Event Venue
           </p>
           <h1 className="mt-3 text-3xl font-semibold text-slate-50 sm:text-4xl lg:text-5xl">
-            Host unforgettable events in an{' '}
-            <span className="bg-gradient-to-r from-brand-300 via-brand-500 to-brand-300 bg-clip-text text-transparent">
-              elegant
-            </span>{' '}
-            setting.
+            Ready for your next event?
           </h1>
           <p className="mt-4 max-w-xl text-sm text-slate-300">
             Manage weddings, corporate events, anniversaries, and more in a

@@ -23,7 +23,7 @@ export const Button = ({
   ...rest
 }: ButtonProps) => {
   const base =
-    'inline-flex items-center justify-center rounded-2xl font-medium transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/80 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:opacity-60 disabled:cursor-not-allowed shadow-[var(--neu-shadow-soft)] active:shadow-[var(--neu-shadow-inset)]';
+    'inline-flex items-center justify-center rounded-2xl font-medium transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/80 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:opacity-60 disabled:cursor-not-allowed shadow-[var(--neu-shadow-soft)] active:shadow-none';
 
   const variants: Record<ButtonVariant, string> = {
     primary:
@@ -31,7 +31,7 @@ export const Button = ({
     secondary:
       'bg-gradient-to-br from-slate-800 to-slate-900 text-slate-50 hover:from-slate-700 hover:to-slate-900 border border-slate-600/70',
     ghost:
-      'bg-transparent text-slate-100 hover:bg-slate-900/70 border border-transparent shadow-none active:shadow-[var(--neu-shadow-inset)]',
+      'bg-transparent text-slate-100 hover:bg-slate-900/70 border border-transparent shadow-none active:shadow-none',
     danger:
       'bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white hover:from-red-400 hover:via-red-500 hover:to-red-700'
   };

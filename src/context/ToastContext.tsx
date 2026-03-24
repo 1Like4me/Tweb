@@ -60,7 +60,7 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`max-w-md w-full rounded-lg border px-4 py-3 text-sm shadow-lg shadow-black/40 backdrop-blur-sm transition ${
+            className={`max-w-md w-full rounded-lg border px-4 py-3 text-sm shadow-md shadow-black/30 backdrop-blur-sm transition ${
               toast.variant === 'success'
                 ? 'bg-emerald-900/80 border-emerald-600 text-emerald-50'
                 : toast.variant === 'error'

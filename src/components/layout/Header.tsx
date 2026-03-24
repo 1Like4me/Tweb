@@ -24,7 +24,7 @@ export const Header = () => {
       <div className="page-container flex items-center justify-between py-3">
         <div className="flex items-center space-x-8">
           <Link to="/" className="flex items-center space-x-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 via-brand-500 to-brand-600 text-slate-950 shadow-[var(--neu-shadow-soft)]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 via-brand-500 to-brand-600 text-slate-950">
               <span className="text-lg font-bold">E</span>
             </div>
             <div className="leading-tight">
@@ -147,7 +147,7 @@ export const Header = () => {
 
         <button
           type="button"
-          className="inline-flex items-center justify-center rounded-2xl border border-slate-700/70 bg-slate-900/80 p-2 text-slate-200 shadow-[var(--neu-shadow-soft)] hover:bg-slate-800 md:hidden"
+          className="inline-flex items-center justify-center rounded-2xl border border-slate-700/70 bg-slate-900/80 p-2 text-slate-200 hover:bg-slate-800 md:hidden"
           onClick={() => setOpen((prev) => !prev)}
         >
           <span className="sr-only">Open main menu</span>
