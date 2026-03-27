@@ -61,6 +61,14 @@ export const Header = () => {
             >
               Services
             </NavLink>
+            <NavLink
+              to="/menu"
+              className={({ isActive }) =>
+                `${navLinkBase} ${isActive ? navLinkActive : navLinkInactive}`
+              }
+            >
+              Menu
+            </NavLink>
             {isAuthenticated && (
               <>
                 <NavLink
@@ -194,6 +202,15 @@ export const Header = () => {
                 }
               >
                 Services
+              </NavLink>
+              <NavLink
+                to="/menu"
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `${navLinkBase} ${isActive ? navLinkActive : navLinkInactive}`
+                }
+              >
+                Menu
               </NavLink>
               {isAuthenticated && (
                 <>

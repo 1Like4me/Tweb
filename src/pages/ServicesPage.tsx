@@ -59,6 +59,14 @@ export const ServicesPage = () => {
           venue rental, basic setup, and access to our amenities. Additional services can be 
           added to create your perfect event.
         </p>
+
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <Link to="/menu">
+            <Button size="lg" variant="primary">
+              Explore menu options
+            </Button>
+          </Link>
+        </div>
       </section>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -69,30 +77,32 @@ export const ServicesPage = () => {
             subtitle={`Starting at $${event.basePrice.toLocaleString()}`}
             className="border-slate-700/50 hover:border-brand-500/50 transition-colors"
           >
-            <p className="text-sm text-slate-300 mb-4">{event.description}</p>
-            
-            <div className="space-y-3">
-              <div className="text-xs text-slate-400">
-                <span className="font-semibold text-slate-200">Max Capacity:</span>{' '}
-                {event.maxCapacity} guests
-              </div>
-              
-              <div>
-                <p className="text-xs font-semibold text-slate-200 mb-2">Includes:</p>
-                <ul className="space-y-1 text-xs text-slate-400">
-                  {event.features.map((feature) => (
-                    <li key={feature}>• {feature}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+            <div className="flex h-full flex-col">
+              <p className="text-sm text-slate-300 mb-4">{event.description}</p>
 
-            <div className="mt-4 pt-4 border-t border-slate-700">
-              <Link to="/booking">
-                <Button size="sm" variant="primary" className="w-full">
-                  Book This Event
-                </Button>
-              </Link>
+              <div className="space-y-3">
+                <div className="text-xs text-slate-400">
+                  <span className="font-semibold text-slate-200">Max Capacity:</span>{' '}
+                  {event.maxCapacity} guests
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold text-slate-200 mb-2">Includes:</p>
+                  <ul className="space-y-1 text-xs text-slate-400">
+                    {event.features.map((feature) => (
+                      <li key={feature}>• {feature}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mt-auto pt-4 border-t border-slate-700">
+                <Link to="/booking">
+                  <Button size="sm" variant="primary" className="w-full">
+                    Book This Event
+                  </Button>
+                </Link>
+              </div>
             </div>
           </Card>
         ))}

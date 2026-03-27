@@ -1,14 +1,12 @@
 import { Card } from '../components/common/Card';
 
 import imgMainHall from '../images/277705435_328129996049318_6968397791204865406_n.jpg';
-import imgTerraceView from '../images/393976631_17977328303568495_2621776563529542796_n.jpg';
 import imgReceptionArea from '../images/76c3c0_574109fe35ae4b3ebe2e746c9cecd767~mv2.avif';
 import imgEventHall from '../images/3b3797_854e938e7423492a8b0267f82159fc50~mv2.avif';
 
 export const AboutPage = () => {
   const galleryItems = [
     { src: imgMainHall, alt: 'Main Hall' },
-    { src: imgTerraceView, alt: 'Terrace View' },
     { src: imgReceptionArea, alt: 'Reception Area' },
     { src: imgEventHall, alt: 'Event Hall' },
   ];
