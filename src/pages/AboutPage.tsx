@@ -1,6 +1,18 @@
 import { Card } from '../components/common/Card';
 
+import imgMainHall from '../images/277705435_328129996049318_6968397791204865406_n.jpg';
+import imgTerraceView from '../images/393976631_17977328303568495_2621776563529542796_n.jpg';
+import imgReceptionArea from '../images/76c3c0_574109fe35ae4b3ebe2e746c9cecd767~mv2.avif';
+import imgEventHall from '../images/3b3797_854e938e7423492a8b0267f82159fc50~mv2.avif';
+
 export const AboutPage = () => {
+  const galleryItems = [
+    { src: imgMainHall, alt: 'Main Hall' },
+    { src: imgTerraceView, alt: 'Terrace View' },
+    { src: imgReceptionArea, alt: 'Reception Area' },
+    { src: imgEventHall, alt: 'Event Hall' },
+  ];
+
   return (
     <div className="space-y-8">
       <section>
@@ -63,19 +75,21 @@ export const AboutPage = () => {
         className="border-brand-500/40"
       >
         <div className="grid gap-4 sm:grid-cols-3">
-          <div className="aspect-video rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
-            <span className="text-xs text-slate-500">Main Hall</span>
-          </div>
-          <div className="aspect-video rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
-            <span className="text-xs text-slate-500">Terrace View</span>
-          </div>
-          <div className="aspect-video rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
-            <span className="text-xs text-slate-500">Reception Area</span>
-          </div>
+          {galleryItems.map((item) => (
+            <div
+              key={item.alt}
+              className="aspect-video overflow-hidden rounded-lg bg-gradient-to-br from-slate-800 to-slate-900"
+            >
+              <img
+                src={item.src}
+                alt={item.alt}
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
+            </div>
+          ))}
         </div>
-        <p className="mt-4 text-xs text-slate-400">
-          Images are placeholders for this demo. In production, these would showcase actual venue photography.
-        </p>
+        <p className="mt-4 text-xs text-slate-400">A selection of venue moments.</p>
       </Card>
     </div>
   );

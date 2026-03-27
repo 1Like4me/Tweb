@@ -92,14 +92,6 @@ body {
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.52);
 }
 
-.neu-footer-shell {
-  @apply border-t border-slate-900/70;
-  background:
-    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(2, 6, 23, 0.98)),
-    var(--neu-bg);
-  box-shadow: 0 -10px 22px rgba(0, 0, 0, 0.5);
-}
-
 .neu-pill {
   @apply rounded-full border border-slate-700/60 bg-slate-900/60 px-3 py-1 text-xs text-slate-300;
   box-shadow: var(--neu-shadow-soft);
