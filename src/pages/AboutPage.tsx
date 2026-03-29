@@ -40,7 +40,7 @@ export const AboutPage = () => {
             <li>• Intimate events: 20-50 guests</li>
             <li>• Theater-style seating: 150 guests</li>
           </ul>
-        </Card>
+        </Card> 
 
         <Card title="Amenities" subtitle="Everything you need">
           <ul className="space-y-2 text-sm text-slate-300">
