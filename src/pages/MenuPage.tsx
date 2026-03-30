@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Link } from 'react-router-dom';
+import { useI18n } from '../i18n/i18n';
 
 type MenuSection = {
   title: string;
@@ -296,16 +297,19 @@ const menuPackages: MenuPackage[] = [
 
 export const MenuPage = () => {
   const [selectedPackage, setSelectedPackage] = useState<MenuPackage | null>(null);
+  const { t } = useI18n();
 
   return (
     <>
       <div className="space-y-8">
         <section>
           <h1 className="text-3xl font-semibold text-slate-50 sm:text-4xl">
-            Menu Options
+            {t('Menu Options')}
           </h1>
           <p className="mt-3 max-w-3xl text-sm text-slate-300">
-            Browse sample menus for each type of event. Packages are fully customizable with our catering team.
+            {t(
+              'Browse sample menus for each type of event. Packages are fully customizable with our catering team.'
+            )}
           </p>
         </section>
 
@@ -313,12 +317,14 @@ export const MenuPage = () => {
           {menuPackages.map((pkg) => (
             <Card
               key={pkg.id}
-              title={`${pkg.emoji} ${pkg.name}`}
-              subtitle={`Starting at $${pkg.startingFrom.toLocaleString()}`}
+              title={`${pkg.emoji} ${t(pkg.name)}`}
+              subtitle={t('Starting at ${amount}', {
+                amount: pkg.startingFrom.toLocaleString()
+              })}
               className="border-slate-700/50 hover:border-brand-500/50 transition-colors"
             >
               <div className="flex h-full flex-col">
-                <p className="text-sm text-slate-300 mb-4">{pkg.blurb}</p>
+                <p className="text-sm text-slate-300 mb-4">{t(pkg.blurb)}</p>
 
                 <div className="mt-auto pt-4 border-t border-slate-700">
                   <Button
@@ -327,7 +333,7 @@ export const MenuPage = () => {
                     className="w-full"
                     onClick={() => setSelectedPackage(pkg)}
                   >
-                    See menu
+                    {t('See menu')}
                   </Button>
                 </div>
               </div>
@@ -341,17 +347,21 @@ export const MenuPage = () => {
           <div className="neu-modal-surface w-full max-w-3xl overflow-hidden">
             <header className="border-b border-slate-800/80 px-5 py-3">
               <h2 className="text-sm font-semibold text-slate-50">
-                {selectedPackage.emoji} {selectedPackage.name} Menu
+                {selectedPackage.emoji} {t(selectedPackage.name)} {t('Menu')}
               </h2>
               <p className="mt-1 text-xs text-slate-400">
-                Starting at ${selectedPackage.startingFrom.toLocaleString()}
+                {t('Starting at ${amount}', {
+                  amount: selectedPackage.startingFrom.toLocaleString()
+                })}
               </p>
             </header>
 
             <div className="max-h-[65vh] space-y-4 overflow-y-auto px-5 py-4 text-sm text-slate-200">
               {selectedPackage.sections.map((section) => (
                 <div key={section.title}>
-                  <p className="mb-1 text-xs font-semibold text-slate-100">{section.title}:</p>
+                  <p className="mb-1 text-xs font-semibold text-slate-100">
+                    {t(section.title)}:
+                  </p>
                   <ul className="space-y-1 text-xs text-slate-400">
                     {section.items.map((item) => (
                       <li key={item}>• {item}</li>
@@ -363,11 +373,11 @@ export const MenuPage = () => {
 
             <footer className="flex justify-end space-x-2 border-t border-slate-800/80 px-5 py-3">
               <Button size="sm" variant="ghost" onClick={() => setSelectedPackage(null)}>
-                Close
+                {t('Close')}
               </Button>
               <Link to="/booking" onClick={() => setSelectedPackage(null)}>
                 <Button size="sm" variant="primary">
-                  Start Booking
+                  {t('Start Booking')}
                 </Button>
               </Link>
             </footer>
