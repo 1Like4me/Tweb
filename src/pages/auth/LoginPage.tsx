@@ -2,11 +2,13 @@ import { useState, FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
+import { useAuth } from '../../hooks/useAuth';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from?.pathname || '/dashboard';
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -18,19 +20,19 @@ export const LoginPage = () => {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.email) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-    
+
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -44,35 +46,13 @@ export const LoginPage = () => {
     }
 
     setLoading(true);
-
-    // Simulate API call delay
-    setTimeout(() => {
-      // Mock authentication - check against mock users
-      const mockUsers = [
-        { email: 'admin@venue.com', password: 'admin123', role: 'admin', name: 'Admin User' },
-        { email: 'user@venue.com', password: 'user123', role: 'user', name: 'John Doe' }
-      ];
-
-      const user = mockUsers.find(
-        u => u.email === formData.email && u.password === formData.password
-      );
-
-      if (user) {
-        // Store in localStorage
-        localStorage.setItem('auth_token', 'mock-jwt-token');
-        localStorage.setItem('current_user', JSON.stringify(user));
-        
-        // Navigate based on role
-        if (user.role === 'admin') {
-          navigate('/admin', { replace: true });
-        } else {
-          navigate(from, { replace: true });
-        }
-      } else {
-        setErrorMessage('Invalid email or password');
-        setLoading(false);
-      }
-    }, 500);
+    try {
+      await login({ email: formData.email, password: formData.password });
+      navigate(from, { replace: true });
+    } catch (err: any) {
+      setErrorMessage(err?.message ?? 'Login failed');
+      setLoading(false);
+    }
   };
 
   return (
