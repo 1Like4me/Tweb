@@ -14,6 +14,7 @@ import { UnauthorizedPage } from './pages/errors/UnauthorizedPage';
 import { ForbiddenPage } from './pages/errors/ForbiddenPage';
 import { NotFoundPage } from './pages/errors/NotFoundPage';
 import { ServerErrorPage } from './pages/errors/ServerErrorPage';
+import { HealthPage } from './pages/HealthPage';
 import { RequireAuth } from './components/layout/RequireAuth';
 import { RequireAdmin } from './components/layout/RequireAdmin';
 import { SeedInitializer } from './components/layout/SeedInitializer';
@@ -70,6 +71,7 @@ function App() {
           <Route path="/500" element={<ServerErrorPage />} />
 
           <Route path="/error" element={<ServerErrorPage />} />
+          <Route path="/health" element={<HealthPage />} />
 
           <Route path="/not-found" element={<NotFoundPage />} />
           <Route path="*" element={<Navigate to="/not-found" replace />} />
