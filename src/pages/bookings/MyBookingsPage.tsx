@@ -2,24 +2,13 @@ import { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
-
-interface Booking {
-  id: string;
-  userId: string;
-  eventType: string;
-  eventDate: string;
-  startTime: string;
-  duration: number;
-  guestCount: number;
-  specialRequests?: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  totalPrice: number;
-  createdAt: string;
-}
+import { Booking } from '../../types/models';
+import { useAuth } from '../../hooks/useAuth';
+import { bookingService } from '../../services/bookingService';
 
 export const MyBookingsPage = () => {
   const location = useLocation();
-  const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+  const { user } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('all');
   const [successMessage, setSuccessMessage] = useState('');
@@ -35,9 +24,14 @@ export const MyBookingsPage = () => {
   }, [location]);
 
   const loadBookings = () => {
-    const allBookings = JSON.parse(localStorage.getItem('venue_bookings') || '[]');
-    const userBookings = allBookings.filter((b: Booking) => b.userId === currentUser.id);
-    setBookings(userBookings);
+    if (!user?.id) {
+      setBookings([]);
+      return;
+    }
+    bookingService
+      .getBookings(user.id)
+      .then(setBookings)
+      .catch(() => setBookings([]));
   };
 
   const handleCancelBooking = (bookingId: string) => {
@@ -45,12 +39,10 @@ export const MyBookingsPage = () => {
       return;
     }
 
-    const allBookings = JSON.parse(localStorage.getItem('venue_bookings') || '[]');
-    const updatedBookings = allBookings.map((b: Booking) => 
-      b.id === bookingId ? { ...b, status: 'cancelled' } : b
-    );
-    localStorage.setItem('venue_bookings', JSON.stringify(updatedBookings));
-    loadBookings();
+    bookingService
+      .changeBookingStatus(bookingId, 'cancelled')
+      .then(() => loadBookings())
+      .catch(() => undefined);
   };
 
   const getStatusColor = (status: string) => {
