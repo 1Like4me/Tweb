@@ -35,6 +35,9 @@ public class AuthService : IAuthService
         {
             Username = dto.Username,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+            Role = dto.Username.Equals("admin@venue.com", StringComparison.OrdinalIgnoreCase)
+                ? UserRole.Admin
+                : UserRole.User,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -65,10 +68,11 @@ public class AuthService : IAuthService
     {
         var key = _configuration["Jwt:Key"];
         var issuer = _configuration["Jwt:Issuer"];
+        var audience = _configuration["Jwt:Audience"];
 
-        if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(issuer))
+        if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(issuer) || string.IsNullOrWhiteSpace(audience))
         {
-            throw new InvalidOperationException("JWT configuration is missing (Jwt:Key / Jwt:Issuer).");
+            throw new InvalidOperationException("JWT configuration is missing (Jwt:Key / Jwt:Issuer / Jwt:Audience).");
         }
 
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
@@ -78,13 +82,18 @@ public class AuthService : IAuthService
 
         var claims = new[]
         {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim("userId", user.Id.ToString()),
-            new Claim("username", user.Username)
+            new Claim(ClaimTypes.Email, user.Username),
+            new Claim("email", user.Username),
+            new Claim("username", user.Username),
+            new Claim(ClaimTypes.Role, user.Role.ToString()),
+            new Claim("role", user.Role.ToString())
         };
 
         var token = new JwtSecurityToken(
             issuer: issuer,
-            audience: null,
+            audience: audience,
             claims: claims,
             expires: expires,
             signingCredentials: credentials

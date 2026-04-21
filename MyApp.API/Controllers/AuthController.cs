@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using MyApp.API.DTOs;
 using MyApp.BusinessLayer.Auth;
@@ -10,12 +9,10 @@ namespace MyApp.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
-    private readonly IMapper _mapper;
 
-    public AuthController(IAuthService authService, IMapper mapper)
+    public AuthController(IAuthService authService)
     {
         _authService = authService;
-        _mapper = mapper;
     }
 
     [HttpPost("register")]

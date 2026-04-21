@@ -17,67 +17,64 @@ import { ServerErrorPage } from './pages/errors/ServerErrorPage';
 import { HealthPage } from './pages/HealthPage';
 import { RequireAuth } from './components/layout/RequireAuth';
 import { RequireAdmin } from './components/layout/RequireAdmin';
-import { SeedInitializer } from './components/layout/SeedInitializer';
 
 function App() {
   return (
-    <SeedInitializer>
-      <Routes>
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/services" element={<ServicesPage />} />
-          <Route path="/menu" element={<MenuPage />} />
+    <Routes>
+      <Route element={<MainLayout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/services" element={<ServicesPage />} />
+        <Route path="/menu" element={<MenuPage />} />
 
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-          <Route
-            path="/booking"
-            element={
-              <RequireAuth>
-                <BookingPage />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <RequireAuth>
-                <UserDashboardPage />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/my-bookings"
-            element={
-              <RequireAuth>
-                <MyBookingsPage />
-              </RequireAuth>
-            }
-          />
+        <Route
+          path="/booking"
+          element={
+            <RequireAuth>
+              <BookingPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <RequireAuth>
+              <UserDashboardPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/my-bookings"
+          element={
+            <RequireAuth>
+              <MyBookingsPage />
+            </RequireAuth>
+          }
+        />
 
-          <Route
-            path="/admin"
-            element={
-              <RequireAdmin>
-                <AdminDashboardPage />
-              </RequireAdmin>
-            }
-          />
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <AdminDashboardPage />
+            </RequireAdmin>
+          }
+        />
 
-          <Route path="/401" element={<UnauthorizedPage />} />
-          <Route path="/403" element={<ForbiddenPage />} />
-          <Route path="/500" element={<ServerErrorPage />} />
+        <Route path="/401" element={<UnauthorizedPage />} />
+        <Route path="/403" element={<ForbiddenPage />} />
+        <Route path="/500" element={<ServerErrorPage />} />
 
-          <Route path="/error" element={<ServerErrorPage />} />
-          <Route path="/health" element={<HealthPage />} />
+        <Route path="/error" element={<ServerErrorPage />} />
+        <Route path="/health" element={<HealthPage />} />
 
-          <Route path="/not-found" element={<NotFoundPage />} />
-          <Route path="*" element={<Navigate to="/not-found" replace />} />
-        </Route>
-      </Routes>
-    </SeedInitializer>
+        <Route path="/not-found" element={<NotFoundPage />} />
+        <Route path="*" element={<Navigate to="/not-found" replace />} />
+      </Route>
+    </Routes>
   );
 }
 
