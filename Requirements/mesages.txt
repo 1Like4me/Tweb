@@ -1,0 +1,22 @@
+Salut, o să definesc mai jos un barem de evaluare cu toate criteriile și detaliile despre acordarea fiecărui punct, iar nota finală reprezintă suma punctelor obținute:
+
+1. Propunerea de proiect – 1 punct
+1 punct - propunerea de proiect pe else (fiecare individual)
+
+2. Raport – 3 puncte
+Pentru raport, cele 3 puncte sunt acordate câte 1 punct pentru fiecare capitol, în dependență de cât de bine s-a realizat:
+1 punct - capitolul 1 - 100%
+1 punct - capitolul 2 - 70% adică până la d. activităților
+1 punct - capitolul 3 - 50%
+
+3. Aplicație – 6 puncte
+Pentru aplicație, cele 6 puncte sunt acordate pentru:
+1 punct - frontend (finalizat complet) dezvoltat pentru minim 2 roluri de acces (user/admin) + backend inițializat cu structura pe straturi (.API, . Domain, .BusinessLayer, .DataAccess) + conectare frontend
+1 punct - definirea entităților și structura aplicație (Controller, Core, Structure)
+1 punct - dezvoltarea operațiilor CRUD pentru minim 3 entități (la nivel de backend)
+1 punct - dezvoltarea unor funcționalități specifice platformei dezvoltate (ceva mai mult decât doar un simplu CRUD)
+1 punct - integrarea backend-ului în proiectul de frontend pentru a elimina mock data și a se desfășura fluxuri reale
+1 punct - platforma implementează mecanisme de validare a datelor, tratarea erorilor/excepțiilor, respectarea metodelor HTTP și status codurile, toate mecanismele să fie însoțite de mesajele respective
+
+_____________________________________________
+

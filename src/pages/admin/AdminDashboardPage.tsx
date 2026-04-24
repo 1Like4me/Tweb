@@ -1,30 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
-
-interface Booking {
-  id: string;
-  userId: string;
-  eventType: string;
-  eventDate: string;
-  startTime: string;
-  duration: number;
-  guestCount: number;
-  specialRequests?: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  totalPrice: number;
-  createdAt: string;
-}
-
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  role: string;
-  createdAt: string;
-}
+import { Booking, User } from '../../types/models';
+import { bookingService } from '../../services/bookingService';
+import { userService } from '../../services/userService';
 
 export const AdminDashboardPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -38,34 +17,40 @@ export const AdminDashboardPage = () => {
   }, []);
 
   const loadData = () => {
-    const allBookings = JSON.parse(localStorage.getItem('venue_bookings') || '[]');
-    const allUsers = JSON.parse(localStorage.getItem('venue_users') || '[]');
-    setBookings(allBookings);
-    setUsers(allUsers);
+    Promise.all([bookingService.getBookings(), userService.getUsers()])
+      .then(([allBookings, allUsers]) => {
+        setBookings(allBookings);
+        setUsers(allUsers);
+      })
+      .catch(() => {
+        setBookings([]);
+        setUsers([]);
+      });
   };
 
   const handleStatusChange = (bookingId: string, newStatus: 'confirmed' | 'cancelled') => {
-    const updatedBookings = bookings.map(b =>
-      b.id === bookingId ? { ...b, status: newStatus } : b
-    );
-    localStorage.setItem('venue_bookings', JSON.stringify(updatedBookings));
-    setBookings(updatedBookings);
+    bookingService
+      .changeBookingStatus(bookingId, newStatus)
+      .then(() => loadData())
+      .catch(() => undefined);
   };
 
   const handleDeleteBooking = (bookingId: string) => {
     if (!confirm('Are you sure you want to delete this booking?')) return;
     
-    const updatedBookings = bookings.filter(b => b.id !== bookingId);
-    localStorage.setItem('venue_bookings', JSON.stringify(updatedBookings));
-    setBookings(updatedBookings);
+    bookingService
+      .deleteBooking(bookingId)
+      .then(() => loadData())
+      .catch(() => undefined);
   };
 
   const handleDeleteUser = (userId: string) => {
     if (!confirm('Are you sure you want to delete this user? All their bookings will remain.')) return;
     
-    const updatedUsers = users.filter(u => u.id !== userId);
-    localStorage.setItem('venue_users', JSON.stringify(updatedUsers));
-    setUsers(updatedUsers);
+    userService
+      .deleteUser(userId)
+      .then(() => loadData())
+      .catch(() => undefined);
   };
 
   const getUserById = (userId: string) => {
