@@ -1,11 +1,15 @@
-import { useState, FormEvent } from 'react';
+import { useEffect, useMemo, useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
+import { useAuth } from '../../hooks/useAuth';
+import { bookingService } from '../../services/bookingService';
+import { eventTypeService } from '../../services/eventTypeService';
+import { EventType } from '../../types/models';
 
 export const BookingPage = () => {
   const navigate = useNavigate();
-  const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState({
     eventType: '',
@@ -17,16 +21,14 @@ export const BookingPage = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [selectedDate, setSelectedDate] = useState('');
+  const [eventTypes, setEventTypes] = useState<EventType[]>([]);
 
-  const eventTypes = [
-    { id: 'wedding', name: 'Wedding', basePrice: 3000, maxCapacity: 200 },
-    { id: 'birthday', name: 'Birthday Party', basePrice: 500, maxCapacity: 50 },
-    { id: 'corporate', name: 'Corporate Event', basePrice: 2000, maxCapacity: 100 },
-    { id: 'anniversary', name: 'Anniversary', basePrice: 1500, maxCapacity: 80 },
-    { id: 'holiday', name: 'Holiday Party', basePrice: 1000, maxCapacity: 60 },
-    { id: 'graduation', name: 'Graduation', basePrice: 800, maxCapacity: 70 }
-  ];
+  useEffect(() => {
+    eventTypeService
+      .getEventTypes()
+      .then(setEventTypes)
+      .catch(() => setEventTypes([]));
+  }, []);
 
   const timeSlots = [
     '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', 
@@ -40,7 +42,11 @@ export const BookingPage = () => {
     { value: '8', label: 'Full day (8 hours)' }
   ];
 
-  const selectedEventType = eventTypes.find(e => e.id === formData.eventType);
+  const selectedEventType = useMemo(
+    () => eventTypes.find((e) => e.id === formData.eventType),
+    [eventTypes, formData.eventType]
+  );
+
   const calculatePrice = () => {
     if (!selectedEventType || !formData.duration) return 0;
     const durationMultiplier = parseInt(formData.duration) / 4; // base price is for 4 hours
@@ -88,28 +94,34 @@ export const BookingPage = () => {
     // Simulate API call
     setTimeout(() => {
       const newBooking = {
-        id: `booking_${Date.now()}`,
-        userId: currentUser.id,
-        eventType: selectedEventType?.name || formData.eventType,
+        userId: user?.id ?? '',
+        eventType: selectedEventType?.id || formData.eventType,
         eventDate: formData.eventDate,
         startTime: formData.startTime,
         duration: parseInt(formData.duration),
         guestCount: parseInt(formData.guestCount),
-        specialRequests: formData.specialRequests,
-        status: 'pending',
-        totalPrice: calculatePrice(),
-        createdAt: new Date().toISOString()
+        specialRequests: formData.specialRequests
       };
-
-      // Save to localStorage
-      const bookings = JSON.parse(localStorage.getItem('venue_bookings') || '[]');
-      bookings.push(newBooking);
-      localStorage.setItem('venue_bookings', JSON.stringify(bookings));
-
-      // Navigate to bookings page
-      navigate('/my-bookings', { 
-        state: { message: 'Booking created successfully! Waiting for admin approval.' }
-      });
+      if (!newBooking.userId) {
+        setLoading(false);
+        setErrors({ form: 'You must be logged in to create a booking.' });
+        return;
+      }
+      bookingService
+        .createBooking(newBooking)
+        .then(() => {
+          navigate('/my-bookings', {
+            state: { message: 'Booking created successfully! Waiting for admin approval.' }
+          });
+        })
+        .catch((err: any) => {
+          setErrors({
+            form:
+              err?.message ??
+              'Could not create booking right now. Please try again.'
+          });
+          setLoading(false);
+        });
     }, 500);
   };
 
@@ -128,6 +140,11 @@ export const BookingPage = () => {
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <Card title="Event Details" subtitle="Tell us about your event">
           <form onSubmit={handleSubmit} className="space-y-5">
+            {errors.form && (
+              <p className="rounded-lg border border-red-500/40 bg-red-900/20 px-3 py-2 text-xs text-red-300">
+                {errors.form}
+              </p>
+            )}
             <div>
               <label htmlFor="eventType" className="block text-sm font-medium text-slate-200 mb-1.5">
                 Event Type *
@@ -161,7 +178,6 @@ export const BookingPage = () => {
                   value={formData.eventDate}
                   onChange={(e) => {
                     setFormData({ ...formData, eventDate: e.target.value });
-                    setSelectedDate(e.target.value);
                   }}
                   className="input w-full"
                   min={new Date().toISOString().split('T')[0]}

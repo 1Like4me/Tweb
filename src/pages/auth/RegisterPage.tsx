@@ -2,9 +2,11 @@ import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
+import { useAuth } from '../../hooks/useAuth';
 
 export const RegisterPage = () => {
   const navigate = useNavigate();
+  const { register } = useAuth();
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -66,41 +68,20 @@ export const RegisterPage = () => {
     }
 
     setLoading(true);
-
-    // Simulate API call delay
-    setTimeout(() => {
-      // Check if email already exists (mock check)
-      const existingUsers = JSON.parse(localStorage.getItem('venue_users') || '[]');
-      
-      if (existingUsers.some((u: any) => u.email === formData.email)) {
-        setErrorMessage('An account with this email already exists');
-        setLoading(false);
-        return;
-      }
-
-      // Create new user
-      const newUser = {
-        id: `user_${Date.now()}`,
+    try {
+      await register({
         email: formData.email,
         password: formData.password,
+        confirmPassword: formData.confirmPassword,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        phone: formData.phone,
-        role: 'user',
-        createdAt: new Date().toISOString()
-      };
-
-      // Save to localStorage
-      existingUsers.push(newUser);
-      localStorage.setItem('venue_users', JSON.stringify(existingUsers));
-
-      // Auto-login
-      localStorage.setItem('auth_token', 'mock-jwt-token');
-      localStorage.setItem('current_user', JSON.stringify(newUser));
-
-      // Navigate to dashboard
+        phone: formData.phone
+      });
       navigate('/dashboard', { replace: true });
-    }, 500);
+    } catch (err: any) {
+      setErrorMessage(err?.response?.data?.message ?? err?.message ?? 'Registration failed');
+      setLoading(false);
+    }
   };
 
   return (

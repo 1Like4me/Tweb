@@ -1,139 +1,94 @@
-import { STORAGE_KEYS } from '../constants/storageKeys';
 import { Booking, BookingStatus, TimeSlot } from '../types/models';
-import { readJson, writeJson } from '../utils/storage';
+import api from './apiClient';
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+interface BookingApiDto {
+  id: number;
+  userId: number;
+  eventTypeId: number;
+  eventTypeName: string;
+  eventDate: string;
+  startTime: string;
+  duration: number;
+  guestCount: number;
+  specialRequests?: string;
+  status: BookingStatus;
+  totalPrice: number;
+  createdAt: string;
+}
 
-const getAllBookings = (): Booking[] => {
-  return readJson<Booking[]>(STORAGE_KEYS.bookings, []);
-};
-
-const saveBookings = (bookings: Booking[]): void => {
-  writeJson(STORAGE_KEYS.bookings, bookings);
-};
-
-const calculateTotalPrice = (booking: Omit<Booking, 'totalPrice' | 'createdAt' | 'id'>): number => {
-  const base = 100;
-  const durationFactor = booking.duration * 150;
-  const guestsFactor = booking.guestCount * 10;
-  return base + durationFactor + guestsFactor;
-};
+const mapBooking = (dto: BookingApiDto): Booking => ({
+  id: String(dto.id),
+  userId: String(dto.userId),
+  eventType: dto.eventTypeName,
+  eventDate: dto.eventDate,
+  startTime: dto.startTime,
+  duration: dto.duration,
+  guestCount: dto.guestCount,
+  specialRequests: dto.specialRequests,
+  status: dto.status,
+  totalPrice: dto.totalPrice,
+  createdAt: dto.createdAt
+});
 
 export const bookingService = {
   async createBooking(
     bookingData: Omit<Booking, 'id' | 'status' | 'totalPrice' | 'createdAt'>
   ): Promise<Booking> {
-    console.log('[bookingService] createBooking', bookingData);
-    await delay(400);
-    const bookings = getAllBookings();
-
-    const isDoubleBooked = bookings.some(
-      (b) =>
-        b.eventDate === bookingData.eventDate &&
-        b.startTime === bookingData.startTime &&
-        b.status !== 'cancelled'
-    );
-    if (isDoubleBooked) {
-      throw { message: 'Selected time slot is no longer available' };
-    }
-
-    const totalPrice = calculateTotalPrice(bookingData);
-    const newBooking: Booking = {
-      ...bookingData,
-      id: `b-${Date.now()}`,
-      status: 'pending',
-      totalPrice,
-      createdAt: new Date().toISOString()
-    };
-    bookings.push(newBooking);
-    saveBookings(bookings);
-    return newBooking;
+    const response = await api.post<BookingApiDto>('/api/bookings', {
+      userId: Number(bookingData.userId),
+      eventTypeId: Number(bookingData.eventType),
+      eventDate: bookingData.eventDate,
+      startTime: bookingData.startTime,
+      duration: bookingData.duration,
+      guestCount: bookingData.guestCount,
+      specialRequests: bookingData.specialRequests
+    });
+    return mapBooking(response.data);
   },
 
   async getBookings(userId?: string): Promise<Booking[]> {
-    console.log('[bookingService] getBookings', userId);
-    await delay(350);
-    const bookings = getAllBookings();
-    if (!userId) return bookings;
-    return bookings.filter((b) => b.userId === userId);
+    const query = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+    const response = await api.get<BookingApiDto[]>(`/api/bookings${query}`);
+    return response.data.map(mapBooking);
   },
 
   async getBookingById(id: string): Promise<Booking> {
-    console.log('[bookingService] getBookingById', id);
-    await delay(300);
-    const bookings = getAllBookings();
-    const found = bookings.find((b) => b.id === id);
-    if (!found) {
-      throw { message: 'Booking not found' };
-    }
-    return found;
+    const response = await api.get<BookingApiDto>(`/api/bookings/${id}`);
+    return mapBooking(response.data);
   },
 
   async updateBooking(
     id: string,
     bookingData: Partial<Omit<Booking, 'id' | 'createdAt'>>
   ): Promise<Booking> {
-    console.log('[bookingService] updateBooking', id, bookingData);
-    await delay(400);
-    const bookings = getAllBookings();
-    const index = bookings.findIndex((b) => b.id === id);
-    if (index === -1) {
-      throw { message: 'Booking not found' };
-    }
-    const current = bookings[index];
-    if (current.status !== 'pending') {
-      throw { message: 'Only pending bookings can be edited' };
-    }
-    const updated: Booking = {
-      ...current,
-      ...bookingData
+    const currentResponse = await api.get<BookingApiDto>(`/api/bookings/${id}`);
+    const current = currentResponse.data;
+    const eventTypeId = Number(bookingData.eventType ?? current.eventTypeId);
+    const payload = {
+      eventTypeId: Number.isNaN(eventTypeId) ? 0 : eventTypeId,
+      eventDate: bookingData.eventDate ?? current.eventDate,
+      startTime: bookingData.startTime ?? current.startTime,
+      duration: bookingData.duration ?? current.duration,
+      guestCount: bookingData.guestCount ?? current.guestCount,
+      specialRequests: bookingData.specialRequests ?? current.specialRequests
     };
-    if (
-      bookingData.eventDate !== undefined ||
-      bookingData.startTime !== undefined ||
-      bookingData.duration !== undefined ||
-      bookingData.guestCount !== undefined
-    ) {
-      updated.totalPrice = calculateTotalPrice({
-        userId: updated.userId,
-        eventType: updated.eventType,
-        eventDate: updated.eventDate,
-        startTime: updated.startTime,
-        duration: updated.duration,
-        guestCount: updated.guestCount,
-        specialRequests: updated.specialRequests
-      });
-    }
-    bookings[index] = updated;
-    saveBookings(bookings);
-    return updated;
+    const response = await api.put<BookingApiDto>(`/api/bookings/${id}`, payload);
+    return mapBooking(response.data);
   },
 
   async deleteBooking(id: string): Promise<void> {
-    console.log('[bookingService] deleteBooking', id);
-    await delay(350);
-    const bookings = getAllBookings();
-    const filtered = bookings.filter((b) => b.id !== id);
-    saveBookings(filtered);
+    await api.delete(`/api/bookings/${id}`);
   },
 
   async changeBookingStatus(id: string, status: BookingStatus): Promise<Booking> {
-    console.log('[bookingService] changeBookingStatus', id, status);
-    await delay(350);
-    const bookings = getAllBookings();
-    const index = bookings.findIndex((b) => b.id === id);
-    if (index === -1) {
-      throw { message: 'Booking not found' };
-    }
-    bookings[index] = { ...bookings[index], status };
-    saveBookings(bookings);
-    return bookings[index];
+    const response = await api.patch<BookingApiDto>(`/api/bookings/${id}/status`, {
+      status
+    });
+    return mapBooking(response.data);
   },
 
   async getAvailableSlots(date: string): Promise<TimeSlot[]> {
-    console.log('[bookingService] getAvailableSlots', date);
-    await delay(300);
-    const bookings = getAllBookings();
+    const bookings = await this.getBookings();
     const hours = ['10:00', '12:00', '14:00', '16:00', '18:00'];
     return hours.map((time) => {
       const existing = bookings.find(
