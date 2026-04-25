@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using MyApp.API.DTOs;
-using MyApp.BusinessLayer.Auth;
+using MyApp.BusinessLayer;
+using MyApp.Domain.Models.Auth;
 
 namespace MyApp.API.Controllers;
 
@@ -8,66 +8,56 @@ namespace MyApp.API.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IAuthService _authService;
+    private readonly IBusinessLogic _businessLogic;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IBusinessLogic businessLogic)
     {
-        _authService = authService;
+        _businessLogic = businessLogic;
     }
 
     [HttpPost("register")]
     [ProducesResponseType(typeof(TokenResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto, CancellationToken cancellationToken)
     {
         try
         {
-            var blDto = new RegisterDtoBl
-            {
-                Username = dto.Username,
-                Password = dto.Password
-            };
+            var authAction = _businessLogic.AuthAction();
+            var token = await authAction.RegisterActionAsync(dto, cancellationToken);
 
-            var tokenBl = await _authService.RegisterAsync(blDto, cancellationToken);
-            var tokenApi = new TokenResponseDto
-            {
-                Token = tokenBl.Token,
-                ExpiresAt = tokenBl.ExpiresAt
-            };
-
-            return Created(string.Empty, tokenApi);
+            return Created(string.Empty, token);
         }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred during registration. Please try again later." });
         }
     }
 
     [HttpPost("login")]
     [ProducesResponseType(typeof(TokenResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Login([FromBody] LoginDto dto, CancellationToken cancellationToken)
     {
         try
         {
-            var blDto = new LoginDtoBl
-            {
-                Username = dto.Username,
-                Password = dto.Password
-            };
+            var authAction = _businessLogic.AuthAction();
+            var token = await authAction.LoginActionAsync(dto, cancellationToken);
 
-            var tokenBl = await _authService.LoginAsync(blDto, cancellationToken);
-            var tokenApi = new TokenResponseDto
-            {
-                Token = tokenBl.Token,
-                ExpiresAt = tokenBl.ExpiresAt
-            };
-
-            return Ok(tokenApi);
+            return Ok(token);
         }
         catch (InvalidOperationException ex)
         {
             return Unauthorized(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred during login. Please try again later." });
         }
     }
 }

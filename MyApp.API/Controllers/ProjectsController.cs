@@ -1,9 +1,7 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MyApp.API.DTOs;
-using MyApp.BusinessLayer.Crud;
-using MyApp.Domain;
+using MyApp.BusinessLayer;
+using MyApp.Domain.Models.Project;
 
 namespace MyApp.API.Controllers;
 
@@ -12,78 +10,156 @@ namespace MyApp.API.Controllers;
 [Authorize]
 public class ProjectsController : ControllerBase
 {
-    private readonly IProjectService _service;
-    private readonly IMapper _mapper;
+    private readonly IBusinessLogic _businessLogic;
 
-    public ProjectsController(IProjectService service, IMapper mapper)
+    public ProjectsController(IBusinessLogic businessLogic)
     {
-        _service = service;
-        _mapper = mapper;
+        _businessLogic = businessLogic;
     }
 
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<ProjectDetailDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var entities = await _service.GetAllAsync(cancellationToken);
-        var dtos = _mapper.Map<IEnumerable<ProjectDetailDto>>(entities);
-        return Ok(dtos);
+        try
+        {
+            var projectAction = _businessLogic.ProjectAction();
+            var dtos = await projectAction.GetAllProjectsActionAsync(cancellationToken);
+            return Ok(dtos);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving projects." });
+        }
     }
 
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(ProjectDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
-        var entity = await _service.GetByIdAsync(id, cancellationToken);
-        if (entity is null)
+        try
         {
-            return NotFound();
-        }
+            var projectAction = _businessLogic.ProjectAction();
+            var dto = await projectAction.GetProjectByIdActionAsync(id, cancellationToken);
+            if (dto is null)
+            {
+                return NotFound(new { message = "Project not found." });
+            }
 
-        var dto = _mapper.Map<ProjectDetailDto>(entity);
-        return Ok(dto);
+            return Ok(dto);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving the project." });
+        }
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(ProjectDetailDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Create([FromBody] ProjectCreateDto dto, CancellationToken cancellationToken)
     {
-        var entity = _mapper.Map<Project>(dto);
-        var created = await _service.CreateAsync(entity, cancellationToken);
-        var detail = _mapper.Map<ProjectDetailDto>(created);
-        return CreatedAtAction(nameof(GetById), new { id = detail.Id }, detail);
+        try
+        {
+            var entity = new Project
+            {
+                Name = dto.Name,
+                UserId = dto.UserId
+            };
+
+            var projectAction = _businessLogic.ProjectAction();
+            var detail = await projectAction.CreateProjectActionAsync(entity, cancellationToken);
+            return CreatedAtAction(nameof(GetById), new { id = detail.Id }, detail);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while creating the project." });
+        }
     }
 
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Update(int id, [FromBody] ProjectUpdateDto dto, CancellationToken cancellationToken)
     {
-        var entity = _mapper.Map<Project>(dto);
-        entity.Id = id;
-
-        var updated = await _service.UpdateAsync(entity, cancellationToken);
-        if (updated is null)
+        try
         {
-            return NotFound();
-        }
+            var projectAction = _businessLogic.ProjectAction();
+            var existing = await projectAction.GetProjectByIdActionAsync(id, cancellationToken);
+            if (existing is null)
+            {
+                return NotFound(new { message = "Project not found." });
+            }
 
-        return NoContent();
+            // Authorization: Only admin or the project owner can update
+            var userIdClaim = User.FindFirst("userId")?.Value;
+            var isAdmin = User.IsInRole("Admin");
+            if (!isAdmin && (!int.TryParse(userIdClaim, out var callerId) || callerId != existing.UserId))
+            {
+                return Forbid();
+            }
+
+            var entity = new Project
+            {
+                Id = id,
+                Name = dto.Name,
+                UserId = existing.UserId
+            };
+
+            var updated = await projectAction.UpdateProjectActionAsync(entity, cancellationToken);
+            if (updated is null)
+            {
+                return NotFound(new { message = "Project not found." });
+            }
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while updating the project." });
+        }
     }
 
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
-        var deleted = await _service.DeleteAsync(id, cancellationToken);
-        if (!deleted)
+        try
         {
-            return NotFound();
-        }
+            var projectAction = _businessLogic.ProjectAction();
+            var existing = await projectAction.GetProjectByIdActionAsync(id, cancellationToken);
+            if (existing is null)
+            {
+                return NotFound(new { message = "Project not found." });
+            }
 
-        return NoContent();
+            // Authorization: Only admin or the project owner can delete
+            var userIdClaim = User.FindFirst("userId")?.Value;
+            var isAdmin = User.IsInRole("Admin");
+            if (!isAdmin && (!int.TryParse(userIdClaim, out var callerId) || callerId != existing.UserId))
+            {
+                return Forbid();
+            }
+
+            var deleted = await projectAction.DeleteProjectActionAsync(id, cancellationToken);
+            if (!deleted)
+            {
+                return NotFound(new { message = "Project not found." });
+            }
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while deleting the project." });
+        }
     }
 }
 

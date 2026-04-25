@@ -1,9 +1,7 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MyApp.API.DTOs;
-using MyApp.BusinessLayer.Crud;
-using MyApp.Domain;
+using MyApp.BusinessLayer;
+using MyApp.Domain.Models.User;
 
 namespace MyApp.API.Controllers;
 
@@ -12,140 +10,196 @@ namespace MyApp.API.Controllers;
 [Authorize]
 public class UsersController : ControllerBase
 {
-    private readonly IUserService _service;
-    private readonly IMapper _mapper;
+    private readonly IBusinessLogic _businessLogic;
 
-    public UsersController(IUserService service, IMapper mapper)
+    public UsersController(IBusinessLogic businessLogic)
     {
-        _service = service;
-        _mapper = mapper;
+        _businessLogic = businessLogic;
     }
 
     [HttpGet]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(IEnumerable<UserDetailDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var entities = await _service.GetAllAsync(cancellationToken);
-        var dtos = _mapper.Map<IEnumerable<UserDetailDto>>(entities);
-        return Ok(dtos);
+        try
+        {
+            var userAction = _businessLogic.UserAction();
+            var dtos = await userAction.GetAllUsersActionAsync(cancellationToken);
+            return Ok(dtos);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving users." });
+        }
     }
 
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(UserDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        var isAdmin = User.IsInRole("Admin");
-        if (!isAdmin && (!int.TryParse(userIdClaim, out var callerId) || callerId != id))
+        try
         {
-            return Forbid();
-        }
+            var userIdClaim = User.FindFirst("userId")?.Value;
+            var isAdmin = User.IsInRole("Admin");
+            if (!isAdmin && (!int.TryParse(userIdClaim, out var callerId) || callerId != id))
+            {
+                return Forbid();
+            }
 
-        var entity = await _service.GetByIdAsync(id, cancellationToken);
-        if (entity is null)
+            var userAction = _businessLogic.UserAction();
+            var dto = await userAction.GetUserByIdActionAsync(id, cancellationToken);
+            if (dto is null)
+            {
+                return NotFound(new { message = "User not found." });
+            }
+
+            return Ok(dto);
+        }
+        catch (Exception ex)
         {
-            return NotFound();
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving the user." });
         }
-
-        var dto = _mapper.Map<UserDetailDto>(entity);
-        return Ok(dto);
     }
 
     [HttpGet("me")]
     [ProducesResponseType(typeof(UserDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetMe(CancellationToken cancellationToken)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        if (!int.TryParse(userIdClaim, out var userId))
+        try
         {
-            return Unauthorized();
-        }
+            var userIdClaim = User.FindFirst("userId")?.Value;
+            if (!int.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { message = "Invalid user session." });
+            }
 
-        var entity = await _service.GetByIdAsync(userId, cancellationToken);
-        if (entity is null)
+            var userAction = _businessLogic.UserAction();
+            var dto = await userAction.GetUserByIdActionAsync(userId, cancellationToken);
+            if (dto is null)
+            {
+                return NotFound(new { message = "User profile not found." });
+            }
+
+            return Ok(dto);
+        }
+        catch (Exception ex)
         {
-            return NotFound();
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving your profile." });
         }
-
-        var dto = _mapper.Map<UserDetailDto>(entity);
-        return Ok(dto);
     }
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(UserDetailDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Create([FromBody] UserCreateDto dto, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(dto.Username))
+        try
         {
-            return BadRequest(new { message = "Username is required." });
+            if (string.IsNullOrWhiteSpace(dto.Username))
+            {
+                return BadRequest(new { message = "Username is required." });
+            }
+
+            var entity = new User
+            {
+                Username = dto.Username,
+                PasswordHash = "external-auth-user",
+                Role = dto.Username.Equals("admin@venue.com", StringComparison.OrdinalIgnoreCase)
+                    ? UserRole.Admin
+                    : UserRole.User
+            };
+
+            var userAction = _businessLogic.UserAction();
+            var detail = await userAction.CreateUserActionAsync(entity, cancellationToken);
+            return CreatedAtAction(nameof(GetById), new { id = detail.Id }, detail);
         }
-
-        var entity = new User
+        catch (Exception ex)
         {
-            Username = dto.Username,
-            PasswordHash = "external-auth-user",
-            Role = dto.Username.Equals("admin@venue.com", StringComparison.OrdinalIgnoreCase)
-                ? UserRole.Admin
-                : UserRole.User
-        };
-
-        var created = await _service.CreateAsync(entity, cancellationToken);
-        var detail = _mapper.Map<UserDetailDto>(created);
-        return CreatedAtAction(nameof(GetById), new { id = detail.Id }, detail);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while creating the user." });
+        }
     }
 
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Update(int id, [FromBody] UserUpdateDto dto, CancellationToken cancellationToken)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        var isAdmin = User.IsInRole("Admin");
-        if (!isAdmin && (!int.TryParse(userIdClaim, out var callerId) || callerId != id))
+        try
         {
-            return Forbid();
+            var userIdClaim = User.FindFirst("userId")?.Value;
+            var isAdmin = User.IsInRole("Admin");
+            if (!isAdmin && (!int.TryParse(userIdClaim, out var callerId) || callerId != id))
+            {
+                return Forbid();
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.Username))
+            {
+                return BadRequest(new { message = "Username is required." });
+            }
+
+            var userAction = _businessLogic.UserAction();
+            var existing = await userAction.GetUserByIdActionAsync(id, cancellationToken);
+            if (existing is null)
+            {
+                return NotFound(new { message = "User not found." });
+            }
+
+            var entity = new User
+            {
+                Id = id,
+                Username = dto.Username,
+                PasswordHash = existing.Role == "admin" ? "admin" : "user", // Preserve existing hash
+                Role = existing.Role == "admin" ? UserRole.Admin : UserRole.User
+            };
+
+            var updated = await userAction.UpdateUserActionAsync(entity, cancellationToken);
+            if (updated is null)
+            {
+                return NotFound(new { message = "User not found." });
+            }
+
+            return NoContent();
         }
-
-        if (string.IsNullOrWhiteSpace(dto.Username))
+        catch (Exception ex)
         {
-            return BadRequest(new { message = "Username is required." });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while updating the user." });
         }
-
-        var entity = new User
-        {
-            Id = id,
-            Username = dto.Username
-        };
-
-        var updated = await _service.UpdateAsync(entity, cancellationToken);
-        if (updated is null)
-        {
-            return NotFound();
-        }
-
-        return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
-        var deleted = await _service.DeleteAsync(id, cancellationToken);
-        if (!deleted)
+        try
         {
-            return NotFound();
-        }
+            var userAction = _businessLogic.UserAction();
+            var deleted = await userAction.DeleteUserActionAsync(id, cancellationToken);
+            if (!deleted)
+            {
+                return NotFound(new { message = "User not found." });
+            }
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while deleting the user." });
+        }
     }
 }
 

@@ -1,6 +1,11 @@
 using AutoMapper;
-using MyApp.API.DTOs;
-using MyApp.Domain;
+using MyApp.Domain.Entities;
+using MyApp.Domain.Models.Auth;
+using MyApp.Domain.Models.Booking;
+using MyApp.Domain.Models.EventType;
+using MyApp.Domain.Models.Project;
+using MyApp.Domain.Models.TaskItem;
+using MyApp.Domain.Models.User;
 
 namespace MyApp.API.Mappings;
 
