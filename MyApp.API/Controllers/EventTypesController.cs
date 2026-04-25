@@ -1,9 +1,7 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MyApp.API.DTOs;
-using MyApp.BusinessLayer.Crud;
-using MyApp.Domain;
+using MyApp.BusinessLayer;
+using MyApp.Domain.Models.EventType;
 
 namespace MyApp.API.Controllers;
 
@@ -12,80 +10,140 @@ namespace MyApp.API.Controllers;
 [Authorize]
 public class EventTypesController : ControllerBase
 {
-    private readonly IEventTypeService _service;
-    private readonly IMapper _mapper;
+    private readonly IBusinessLogic _businessLogic;
 
-    public EventTypesController(IEventTypeService service, IMapper mapper)
+    public EventTypesController(IBusinessLogic businessLogic)
     {
-        _service = service;
-        _mapper = mapper;
+        _businessLogic = businessLogic;
     }
 
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<EventTypeDetailDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var entities = await _service.GetAllAsync(cancellationToken);
-        var dtos = _mapper.Map<IEnumerable<EventTypeDetailDto>>(entities);
-        return Ok(dtos);
+        try
+        {
+            var eventTypeAction = _businessLogic.EventTypeAction();
+            var dtos = await eventTypeAction.GetAllEventTypesActionAsync(cancellationToken);
+            return Ok(dtos);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving event types." });
+        }
     }
 
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(EventTypeDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
-        var entity = await _service.GetByIdAsync(id, cancellationToken);
-        if (entity is null)
+        try
         {
-            return NotFound();
-        }
+            var eventTypeAction = _businessLogic.EventTypeAction();
+            var dto = await eventTypeAction.GetEventTypeByIdActionAsync(id, cancellationToken);
+            if (dto is null)
+            {
+                return NotFound(new { message = "Event type not found." });
+            }
 
-        var dto = _mapper.Map<EventTypeDetailDto>(entity);
-        return Ok(dto);
+            return Ok(dto);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving the event type." });
+        }
     }
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(EventTypeDetailDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Create([FromBody] EventTypeCreateDto dto, CancellationToken cancellationToken)
     {
-        var entity = _mapper.Map<EventType>(dto);
-        var created = await _service.CreateAsync(entity, cancellationToken);
-        var detail = _mapper.Map<EventTypeDetailDto>(created);
-        return CreatedAtAction(nameof(GetById), new { id = detail.Id }, detail);
+        try
+        {
+            var entity = new EventType
+            {
+                Name = dto.Name,
+                Description = dto.Description,
+                BasePrice = dto.BasePrice,
+                MaxCapacity = dto.MaxCapacity
+            };
+
+            var eventTypeAction = _businessLogic.EventTypeAction();
+            var detail = await eventTypeAction.CreateEventTypeActionAsync(entity, cancellationToken);
+            return CreatedAtAction(nameof(GetById), new { id = detail.Id }, detail);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while creating the event type." });
+        }
     }
 
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Update(int id, [FromBody] EventTypeUpdateDto dto, CancellationToken cancellationToken)
     {
-        var entity = _mapper.Map<EventType>(dto);
-        entity.Id = id;
-
-        var updated = await _service.UpdateAsync(entity, cancellationToken);
-        if (updated is null)
+        try
         {
-            return NotFound();
-        }
+            var eventTypeAction = _businessLogic.EventTypeAction();
+            var existing = await eventTypeAction.GetEventTypeByIdActionAsync(id, cancellationToken);
+            if (existing is null)
+            {
+                return NotFound(new { message = "Event type not found." });
+            }
 
-        return NoContent();
+            var entity = new EventType
+            {
+                Id = id,
+                Name = dto.Name,
+                Description = dto.Description,
+                BasePrice = dto.BasePrice,
+                MaxCapacity = dto.MaxCapacity
+            };
+
+            var updated = await eventTypeAction.UpdateEventTypeActionAsync(entity, cancellationToken);
+            if (updated is null)
+            {
+                return NotFound(new { message = "Event type not found." });
+            }
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while updating the event type." });
+        }
     }
 
     [HttpDelete("{id:int}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
-        var deleted = await _service.DeleteAsync(id, cancellationToken);
-        if (!deleted)
+        try
         {
-            return NotFound();
-        }
+            var eventTypeAction = _businessLogic.EventTypeAction();
+            var deleted = await eventTypeAction.DeleteEventTypeActionAsync(id, cancellationToken);
+            if (!deleted)
+            {
+                return NotFound(new { message = "Event type not found." });
+            }
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while deleting the event type." });
+        }
     }
 }

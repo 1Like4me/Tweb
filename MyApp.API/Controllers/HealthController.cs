@@ -7,21 +7,32 @@ namespace MyApp.API.Controllers;
 [Route("api/health")]
 public class HealthController : ControllerBase
 {
+    private readonly IBusinessLogic _businessLogic;
     private readonly IHealthService _healthService;
 
-    public HealthController(IHealthService healthService)
+    public HealthController(IBusinessLogic businessLogic, IHealthService healthService)
     {
+        _businessLogic = businessLogic;
         _healthService = healthService;
     }
 
     [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public IActionResult Get()
     {
-        return Ok(new
+        try
         {
-            status = _healthService.GetStatus(),
-            timestamp = DateTime.UtcNow
-        });
+            return Ok(new
+            {
+                status = _healthService.GetStatus(),
+                timestamp = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Health check failed." });
+        }
     }
 }
 

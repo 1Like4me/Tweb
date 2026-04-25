@@ -1,9 +1,7 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MyApp.API.DTOs;
-using MyApp.BusinessLayer.Crud;
-using MyApp.Domain;
+using MyApp.BusinessLayer;
+using MyApp.Domain.Models.Booking;
 
 namespace MyApp.API.Controllers;
 
@@ -12,161 +10,249 @@ namespace MyApp.API.Controllers;
 [Authorize]
 public class BookingsController : ControllerBase
 {
-    private readonly IBookingService _service;
-    private readonly IMapper _mapper;
+    private readonly IBusinessLogic _businessLogic;
 
-    public BookingsController(IBookingService service, IMapper mapper)
+    public BookingsController(IBusinessLogic businessLogic)
     {
-        _service = service;
-        _mapper = mapper;
+        _businessLogic = businessLogic;
     }
 
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<BookingDetailDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetAll([FromQuery] int? userId, CancellationToken cancellationToken)
     {
-        var isAdmin = User.IsInRole("Admin");
-        var callerUserIdClaim = User.FindFirst("userId")?.Value;
-        var callerUserId = int.TryParse(callerUserIdClaim, out var parsedUserId) ? parsedUserId : (int?)null;
-
-        if (!isAdmin && !callerUserId.HasValue)
+        try
         {
-            return Unauthorized();
-        }
+            var isAdmin = User.IsInRole("Admin");
+            var callerUserIdClaim = User.FindFirst("userId")?.Value;
+            var callerUserId = int.TryParse(callerUserIdClaim, out var parsedUserId) ? parsedUserId : (int?)null;
 
-        var effectiveUserId = isAdmin ? userId : callerUserId;
-        var entities = await _service.GetAllAsync(effectiveUserId, cancellationToken);
-        var dtos = _mapper.Map<IEnumerable<BookingDetailDto>>(entities);
-        return Ok(dtos);
+            if (!isAdmin && !callerUserId.HasValue)
+            {
+                return Unauthorized(new { message = "Invalid user session." });
+            }
+
+            var effectiveUserId = isAdmin ? userId : callerUserId;
+            var bookingAction = _businessLogic.BookingAction();
+            var dtos = await bookingAction.GetAllBookingsActionAsync(effectiveUserId, cancellationToken);
+            return Ok(dtos);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving bookings." });
+        }
     }
 
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(BookingDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
-        var entity = await _service.GetByIdAsync(id, cancellationToken);
-        if (entity is null)
+        try
         {
-            return NotFound();
-        }
+            var bookingAction = _businessLogic.BookingAction();
+            var dto = await bookingAction.GetBookingByIdActionAsync(id, cancellationToken);
+            if (dto is null)
+            {
+                return NotFound(new { message = "Booking not found." });
+            }
 
-        var isAdmin = User.IsInRole("Admin");
-        var callerUserIdClaim = User.FindFirst("userId")?.Value;
-        if (!isAdmin && (!int.TryParse(callerUserIdClaim, out var callerUserId) || callerUserId != entity.UserId))
+            var isAdmin = User.IsInRole("Admin");
+            var callerUserIdClaim = User.FindFirst("userId")?.Value;
+            if (!isAdmin && (!int.TryParse(callerUserIdClaim, out var callerUserId) || callerUserId != dto.UserId))
+            {
+                return Forbid();
+            }
+
+            return Ok(dto);
+        }
+        catch (Exception ex)
         {
-            return Forbid();
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving the booking." });
         }
-
-        var dto = _mapper.Map<BookingDetailDto>(entity);
-        return Ok(dto);
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(BookingDetailDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Create([FromBody] BookingCreateDto dto, CancellationToken cancellationToken)
     {
-        if (!DateOnly.TryParse(dto.EventDate, out var eventDate) || !TimeOnly.TryParse(dto.StartTime, out var startTime))
+        try
         {
-            return BadRequest(new { message = "Invalid event date or start time format." });
-        }
+            if (!DateOnly.TryParse(dto.EventDate, out var eventDate) || !TimeOnly.TryParse(dto.StartTime, out var startTime))
+            {
+                return BadRequest(new { message = "Invalid event date or start time format." });
+            }
 
-        var isAdmin = User.IsInRole("Admin");
-        var callerUserIdClaim = User.FindFirst("userId")?.Value;
-        if (!isAdmin && (!int.TryParse(callerUserIdClaim, out var callerUserId) || callerUserId != dto.UserId))
+            var isAdmin = User.IsInRole("Admin");
+            var callerUserIdClaim = User.FindFirst("userId")?.Value;
+            if (!isAdmin && (!int.TryParse(callerUserIdClaim, out var callerUserId) || callerUserId != dto.UserId))
+            {
+                return Forbid();
+            }
+
+            var entity = new Booking
+            {
+                UserId = dto.UserId,
+                EventTypeId = dto.EventTypeId,
+                EventDate = eventDate,
+                StartTime = startTime,
+                Duration = dto.Duration,
+                GuestCount = dto.GuestCount,
+                SpecialRequests = dto.SpecialRequests
+            };
+
+            var bookingAction = _businessLogic.BookingAction();
+            var detail = await bookingAction.CreateBookingActionAsync(entity, cancellationToken);
+            if (detail is null)
+            {
+                return BadRequest(new { message = "Invalid user or event type for booking." });
+            }
+
+            return CreatedAtAction(nameof(GetById), new { id = detail.Id }, detail);
+        }
+        catch (Exception ex)
         {
-            return Forbid();
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while creating the booking." });
         }
-
-        var entity = _mapper.Map<Booking>(dto);
-        entity.EventDate = eventDate;
-        entity.StartTime = startTime;
-
-        var created = await _service.CreateAsync(entity, cancellationToken);
-        if (created is null)
-        {
-            return BadRequest(new { message = "Invalid user or event type for booking." });
-        }
-
-        var detail = _mapper.Map<BookingDetailDto>(created);
-        return CreatedAtAction(nameof(GetById), new { id = detail.Id }, detail);
     }
 
     [HttpPut("{id:int}")]
     [ProducesResponseType(typeof(BookingDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Update(int id, [FromBody] BookingUpdateDto dto, CancellationToken cancellationToken)
     {
-        if (!DateOnly.TryParse(dto.EventDate, out var eventDate) || !TimeOnly.TryParse(dto.StartTime, out var startTime))
+        try
         {
-            return BadRequest(new { message = "Invalid event date or start time format." });
-        }
+            if (!DateOnly.TryParse(dto.EventDate, out var eventDate) || !TimeOnly.TryParse(dto.StartTime, out var startTime))
+            {
+                return BadRequest(new { message = "Invalid event date or start time format." });
+            }
 
-        var existing = await _service.GetByIdAsync(id, cancellationToken);
-        if (existing is null)
+            var bookingAction = _businessLogic.BookingAction();
+            var existing = await bookingAction.GetBookingByIdActionAsync(id, cancellationToken);
+            if (existing is null)
+            {
+                return NotFound(new { message = "Booking not found." });
+            }
+
+            var isAdmin = User.IsInRole("Admin");
+            var callerUserIdClaim = User.FindFirst("userId")?.Value;
+            if (!isAdmin && (!int.TryParse(callerUserIdClaim, out var callerUserId) || callerUserId != existing.UserId))
+            {
+                return Forbid();
+            }
+
+            var entity = new Booking
+            {
+                Id = id,
+                UserId = existing.UserId,
+                EventTypeId = dto.EventTypeId,
+                EventDate = eventDate,
+                StartTime = startTime,
+                Duration = dto.Duration,
+                GuestCount = dto.GuestCount,
+                SpecialRequests = dto.SpecialRequests
+            };
+
+            var updated = await bookingAction.UpdateBookingActionAsync(entity, cancellationToken);
+            if (updated is null)
+            {
+                return NotFound(new { message = "Booking not found." });
+            }
+
+            return Ok(updated);
+        }
+        catch (Exception ex)
         {
-            return NotFound();
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while updating the booking." });
         }
-
-        var isAdmin = User.IsInRole("Admin");
-        var callerUserIdClaim = User.FindFirst("userId")?.Value;
-        if (!isAdmin && (!int.TryParse(callerUserIdClaim, out var callerUserId) || callerUserId != existing.UserId))
-        {
-            return Forbid();
-        }
-
-        var entity = _mapper.Map<Booking>(dto);
-        entity.Id = id;
-        entity.UserId = existing.UserId;
-        entity.EventDate = eventDate;
-        entity.StartTime = startTime;
-
-        var updated = await _service.UpdateAsync(entity, cancellationToken);
-        if (updated is null)
-        {
-            return NotFound();
-        }
-
-        var detail = _mapper.Map<BookingDetailDto>(updated);
-        return Ok(detail);
     }
 
-    [HttpPatch("{id:int}/status")]
-    [Authorize(Roles = "Admin")]
+    [HttpPut("{id:int}/status")]
     [ProducesResponseType(typeof(BookingDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> ChangeStatus(int id, [FromBody] BookingStatusUpdateDto dto, CancellationToken cancellationToken)
     {
-        if (!Enum.TryParse<BookingStatus>(dto.Status, true, out var status))
+        try
         {
-            return BadRequest(new { message = "Invalid booking status." });
-        }
+            var bookingAction = _businessLogic.BookingAction();
+            var existing = await bookingAction.GetBookingByIdActionAsync(id, cancellationToken);
+            if (existing is null)
+            {
+                return NotFound(new { message = "Booking not found." });
+            }
 
-        var updated = await _service.ChangeStatusAsync(id, status, cancellationToken);
-        if (updated is null)
+            var isAdmin = User.IsInRole("Admin");
+            var callerUserIdClaim = User.FindFirst("userId")?.Value;
+            if (!isAdmin && (!int.TryParse(callerUserIdClaim, out var callerUserId) || callerUserId != existing.UserId))
+            {
+                return Forbid();
+            }
+
+            var status = dto.Status.ToLower() switch
+            {
+                "pending" => BookingStatus.Pending,
+                "confirmed" => BookingStatus.Confirmed,
+                "cancelled" => BookingStatus.Cancelled,
+                _ => BookingStatus.Pending
+            };
+
+            var updated = await bookingAction.ChangeBookingStatusActionAsync(id, status, cancellationToken);
+            if (updated is null)
+            {
+                return NotFound(new { message = "Booking not found." });
+            }
+
+            return Ok(updated);
+        }
+        catch (Exception ex)
         {
-            return NotFound();
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while updating booking status." });
         }
-
-        var detail = _mapper.Map<BookingDetailDto>(updated);
-        return Ok(detail);
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
-        var deleted = await _service.DeleteAsync(id, cancellationToken);
-        if (!deleted)
+        try
         {
-            return NotFound();
-        }
+            var bookingAction = _businessLogic.BookingAction();
+            var existing = await bookingAction.GetBookingByIdActionAsync(id, cancellationToken);
+            if (existing is null)
+            {
+                return NotFound(new { message = "Booking not found." });
+            }
 
-        return NoContent();
+            var isAdmin = User.IsInRole("Admin");
+            var callerUserIdClaim = User.FindFirst("userId")?.Value;
+            if (!isAdmin && (!int.TryParse(callerUserIdClaim, out var callerUserId) || callerUserId != existing.UserId))
+            {
+                return Forbid();
+            }
+
+            var deleted = await bookingAction.DeleteBookingActionAsync(id, cancellationToken);
+            if (!deleted)
+            {
+                return NotFound(new { message = "Booking not found." });
+            }
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while deleting the booking." });
+        }
     }
 }

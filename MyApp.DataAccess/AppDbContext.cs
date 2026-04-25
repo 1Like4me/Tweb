@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MyApp.Domain;
+using MyApp.Domain.Entities;
 
 namespace MyApp.DataAccess;
 
@@ -10,7 +11,7 @@ public class AppDbContext : DbContext
     {
     }
 
-    public DbSet<HealthCheckEntry> HealthChecks => Set<HealthCheckEntry>();
+    public DbSet<MyApp.Domain.HealthCheckEntry> HealthChecks => Set<MyApp.Domain.HealthCheckEntry>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
@@ -49,7 +50,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>().Property(u => u.PasswordHash).IsRequired();
         modelBuilder.Entity<User>().Property(u => u.Role).IsRequired();
         modelBuilder.Entity<Project>().Property(p => p.Name).IsRequired();
-        modelBuilder.Entity<TaskItem>().Property(t => t.Name).IsRequired();
+        modelBuilder.Entity<TaskItem>().Property(t => t.Title).IsRequired();
+        modelBuilder.Entity<TaskItem>().Property(t => t.Status).IsRequired();
         modelBuilder.Entity<EventType>().Property(e => e.Name).IsRequired();
         modelBuilder.Entity<EventType>().Property(e => e.Description).IsRequired();
         modelBuilder.Entity<Booking>().Property(b => b.Duration).IsRequired();

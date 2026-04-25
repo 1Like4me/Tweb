@@ -5,9 +5,17 @@ using System.Text;
 using MyApp.API.Mappings;
 using MyApp.BusinessLayer;
 using MyApp.DataAccess;
-using MyApp.Domain;
+using MyApp.Domain.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add logging
+builder.Services.AddLogging(logging =>
+{
+    logging.ClearProviders();
+    logging.AddConsole();
+    logging.AddDebug();
+});
 
 // Add services to the container.
 
@@ -41,15 +49,20 @@ builder.Services.AddSwaggerGen(options =>
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(ApiMappingProfile).Assembly);
 
+// Register BusinessLogic in DI container for dependency injection
+builder.Services.AddScoped<IBusinessLogic>(provider =>
+    new BusinessLogic(
+        provider.GetRequiredService<AppDbContext>(),
+        provider.GetRequiredService<IConfiguration>()
+    )
+);
+
 // EF Core - SQLite
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Data Source=MyApp.db";
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(connectionString));
-
-// Business-layer services
-builder.Services.AddBusinessLayer();
 
 // CORS policy (frontend React app)
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
@@ -95,56 +108,63 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
 
-    if (!db.EventTypes.Any())
-    {
-        db.EventTypes.AddRange(
-            new EventType { Name = "Wedding", Description = "Elegant wedding celebrations with full-service coordination.", BasePrice = 3000m, MaxCapacity = 200 },
-            new EventType { Name = "Birthday Party", Description = "Intimate or grand birthday parties with custom decor.", BasePrice = 500m, MaxCapacity = 50 },
-            new EventType { Name = "Corporate Event", Description = "Professional conferences, product launches, and team buildings.", BasePrice = 2000m, MaxCapacity = 100 },
-            new EventType { Name = "Anniversary", Description = "Celebrate milestones with style and unforgettable ambiance.", BasePrice = 1500m, MaxCapacity = 80 },
-            new EventType { Name = "Holiday Party", Description = "Festive gatherings for Christmas, New Year, and more.", BasePrice = 1000m, MaxCapacity = 60 },
-            new EventType { Name = "Graduation", Description = "Mark the next chapter with a memorable celebration.", BasePrice = 800m, MaxCapacity = 70 }
-        );
-        db.SaveChanges();
-    }
-
-    if (!db.Users.Any())
-    {
-        db.Users.AddRange(
-            new User
-            {
-                Username = "admin@venue.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
-                Role = UserRole.Admin,
-                CreatedAt = DateTime.UtcNow
-            },
-            new User
-            {
-                Username = "user@venue.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("user123"),
-                Role = UserRole.User,
-                CreatedAt = DateTime.UtcNow
-            }
-        );
-        db.SaveChanges();
-    }
-    else
-    {
-        var usersNeedingRoleFix = db.Users.Where(u => (int)u.Role == 0).ToList();
-        foreach (var user in usersNeedingRoleFix)
+        if (!db.EventTypes.Any())
         {
-            user.Role = user.Username.Equals("admin@venue.com", StringComparison.OrdinalIgnoreCase)
-                ? UserRole.Admin
-                : UserRole.User;
-        }
-
-        if (usersNeedingRoleFix.Count > 0)
-        {
+            db.EventTypes.AddRange(
+                new EventType { Name = "Wedding", Description = "Elegant wedding celebrations with full-service coordination.", BasePrice = 3000m, MaxCapacity = 200 },
+                new EventType { Name = "Birthday Party", Description = "Intimate or grand birthday parties with custom decor.", BasePrice = 500m, MaxCapacity = 50 },
+                new EventType { Name = "Corporate Event", Description = "Professional conferences, product launches, and team buildings.", BasePrice = 2000m, MaxCapacity = 100 },
+                new EventType { Name = "Anniversary", Description = "Celebrate milestones with style and unforgettable ambiance.", BasePrice = 1500m, MaxCapacity = 80 },
+                new EventType { Name = "Holiday Party", Description = "Festive gatherings for Christmas, New Year, and more.", BasePrice = 1000m, MaxCapacity = 60 },
+                new EventType { Name = "Graduation", Description = "Mark the next chapter with a memorable celebration.", BasePrice = 800m, MaxCapacity = 70 }
+            );
             db.SaveChanges();
         }
+
+        if (!db.Users.Any())
+        {
+            db.Users.AddRange(
+                new User
+                {
+                    Username = "admin@venue.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
+                    Role = UserRole.Admin,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new User
+                {
+                    Username = "user@venue.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("user123"),
+                    Role = UserRole.User,
+                    CreatedAt = DateTime.UtcNow
+                }
+            );
+            db.SaveChanges();
+        }
+        else
+        {
+            var usersNeedingRoleFix = db.Users.Where(u => (int)u.Role == 0).ToList();
+            foreach (var user in usersNeedingRoleFix)
+            {
+                user.Role = user.Username.Equals("admin@venue.com", StringComparison.OrdinalIgnoreCase)
+                    ? UserRole.Admin
+                    : UserRole.User;
+            }
+
+            if (usersNeedingRoleFix.Count > 0)
+            {
+                db.SaveChanges();
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Database initialization error: {ex.Message}");
     }
 }
 
