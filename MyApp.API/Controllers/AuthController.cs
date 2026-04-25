@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using MyApp.BusinessLayer;
-using MyApp.DataAccess;
 using MyApp.Domain.Models.Auth;
 
 namespace MyApp.API.Controllers;
@@ -10,11 +8,11 @@ namespace MyApp.API.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly BusinessLogic _businessLogic;
+    private readonly IBusinessLogic _businessLogic;
 
-    public AuthController(AppDbContext db, IConfiguration configuration)
+    public AuthController(IBusinessLogic businessLogic)
     {
-        _businessLogic = new BusinessLogic(db, configuration);
+        _businessLogic = businessLogic;
     }
 
     [HttpPost("register")]

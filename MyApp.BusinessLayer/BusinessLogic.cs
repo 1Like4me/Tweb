@@ -5,7 +5,11 @@ using MyApp.DataAccess;
 
 namespace MyApp.BusinessLayer;
 
-public class BusinessLogic
+/// <summary>
+/// Factory class for creating action instances.
+/// Implements IBusinessLogic to support dependency injection.
+/// </summary>
+public class BusinessLogic : IBusinessLogic
 {
     private readonly AppDbContext _db;
     private readonly IConfiguration _configuration;

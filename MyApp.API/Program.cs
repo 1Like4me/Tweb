@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using MyApp.API.Mappings;
+using MyApp.BusinessLayer;
 using MyApp.DataAccess;
 using MyApp.Domain.Entities;
 
@@ -48,15 +49,20 @@ builder.Services.AddSwaggerGen(options =>
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(ApiMappingProfile).Assembly);
 
+// Register BusinessLogic in DI container for dependency injection
+builder.Services.AddScoped<IBusinessLogic>(provider =>
+    new BusinessLogic(
+        provider.GetRequiredService<AppDbContext>(),
+        provider.GetRequiredService<IConfiguration>()
+    )
+);
+
 // EF Core - SQLite
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Data Source=MyApp.db";
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(connectionString));
-
-// Factory pattern - controllers will instantiate BusinessLogic as needed
-// No need for service registration
 
 // CORS policy (frontend React app)
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()

@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApp.BusinessLayer;
-using MyApp.DataAccess;
-using MyApp.Domain.Entities;
 using MyApp.Domain.Models.Project;
 
 namespace MyApp.API.Controllers;
@@ -12,11 +10,11 @@ namespace MyApp.API.Controllers;
 [Authorize]
 public class ProjectsController : ControllerBase
 {
-    private readonly BusinessLogic _businessLogic;
+    private readonly IBusinessLogic _businessLogic;
 
-    public ProjectsController(AppDbContext db, IConfiguration configuration)
+    public ProjectsController(IBusinessLogic businessLogic)
     {
-        _businessLogic = new BusinessLogic(db, configuration);
+        _businessLogic = businessLogic;
     }
 
     [HttpGet]

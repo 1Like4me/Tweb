@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using MyApp.BusinessLayer;
-using MyApp.DataAccess;
 
 namespace MyApp.API.Controllers;
 
@@ -8,13 +7,13 @@ namespace MyApp.API.Controllers;
 [Route("api/health")]
 public class HealthController : ControllerBase
 {
-    private readonly BusinessLogic _businessLogic;
+    private readonly IBusinessLogic _businessLogic;
     private readonly IHealthService _healthService;
 
-    public HealthController(AppDbContext db, IConfiguration configuration)
+    public HealthController(IBusinessLogic businessLogic, IHealthService healthService)
     {
-        _businessLogic = new BusinessLogic(db, configuration);
-        _healthService = new HealthService();
+        _businessLogic = businessLogic;
+        _healthService = healthService;
     }
 
     [HttpGet]
