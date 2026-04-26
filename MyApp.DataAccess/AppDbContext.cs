@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using MyApp.Domain;
 using MyApp.Domain.Entities;
 
 namespace MyApp.DataAccess;
@@ -11,7 +10,7 @@ public class AppDbContext : DbContext
     {
     }
 
-    public DbSet<MyApp.Domain.HealthCheckEntry> HealthChecks => Set<MyApp.Domain.HealthCheckEntry>();
+    public DbSet<HealthCheckEntry> HealthChecks => Set<HealthCheckEntry>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<TaskItem> Tasks => Set<TaskItem>();

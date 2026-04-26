@@ -81,7 +81,7 @@ export const bookingService = {
   },
 
   async changeBookingStatus(id: string, status: BookingStatus): Promise<Booking> {
-    const response = await api.patch<BookingApiDto>(`/api/bookings/${id}/status`, {
+    const response = await api.put<BookingApiDto>(`/api/bookings/${id}/status`, {
       status
     });
     return mapBooking(response.data);

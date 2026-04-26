@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MyApp.BusinessLayer;
+using MyApp.Domain.Entities;
 
 namespace MyApp.API.Controllers;
 
@@ -29,10 +30,13 @@ public class HealthController : ControllerBase
                 timestamp = DateTime.UtcNow
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Health check failed." });
         }
     }
 }
+
+
+
 
