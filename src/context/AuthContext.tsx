@@ -13,9 +13,12 @@ export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  canSwitchRoleView: boolean;
+  isViewingAsUser: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
+  toggleRoleView: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,6 +29,7 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isViewingAsUser, setIsViewingAsUser] = useState(false);
 
   useEffect(() => {
     const existing = authService.getCurrentUser();
@@ -37,28 +41,38 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const handleLogin = useCallback(async (credentials: LoginCredentials) => {
     const loggedIn = await authService.login(credentials);
     setUser(loggedIn);
+    setIsViewingAsUser(false);
   }, []);
 
   const handleRegister = useCallback(async (data: RegisterData) => {
     const registered = await authService.register(data);
     setUser(registered);
+    setIsViewingAsUser(false);
   }, []);
 
   const handleLogout = useCallback(() => {
     authService.logout();
     setUser(null);
+    setIsViewingAsUser(false);
+  }, []);
+
+  const handleToggleRoleView = useCallback(() => {
+    setIsViewingAsUser((prev) => !prev);
   }, []);
 
   const value = useMemo<AuthContextType>(
     () => ({
       user,
       isAuthenticated: Boolean(user),
-      isAdmin: user?.role === 'admin',
+      isAdmin: user?.role === 'admin' && !isViewingAsUser,
+      canSwitchRoleView: user?.role === 'admin',
       login: handleLogin,
       register: handleRegister,
-      logout: handleLogout
+      logout: handleLogout,
+      isViewingAsUser,
+      toggleRoleView: handleToggleRoleView
     }),
-    [handleLogin, handleLogout, handleRegister, user]
+    [handleLogin, handleLogout, handleRegister, handleToggleRoleView, isViewingAsUser, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

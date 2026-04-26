@@ -22,6 +22,8 @@ export const roDict: Record<string, string> = {
   'Elegance Venue': 'Elegance Venue',
   'Event Booking Management': 'Gestiunea rezervărilor de evenimente',
   'Signed in as': 'Autentificat ca',
+  'Switch to user view': 'Comută la modul utilizator',
+  'Switch to admin view': 'Comută la modul administrator',
 
   // Common page labels (public site)
   'About Our Venue': 'Despre locația noastră',
@@ -31,8 +33,25 @@ export const roDict: Record<string, string> = {
 
   'Boutique Event Venue': 'Locație boutique pentru evenimente',
   'Ready for your next event?': 'Gata pentru următorul tău eveniment?',
+  'Manage weddings, corporate events, anniversaries, and more in a single, intuitive dashboard.':
+    'Gestionează nunți, evenimente corporate, aniversări și multe altele într-un singur tablou de bord intuitiv.',
   'Manage weddings, corporate events, anniversaries, and more in a single, intuitive dashboard. This demo frontend showcases a complete booking experience built with React and TypeScript.':
     'Gestionează nunți, evenimente corporative, aniversări și multe altele într-un singur tablou de bord intuitiv. Acest demo arată o experiență completă de rezervare, construită cu React și TypeScript.',
+  'Your event is just a few clicks away': 'Evenimentul tău este la doar câteva click-uri distanță',
+  'Simple booking flow, elegant results.': 'Proces simplu de rezervare, rezultate elegante.',
+  'Plan your celebration in minutes with a smooth and guided booking experience.':
+    'Planifică-ți evenimentul în câteva minute cu o experiență de rezervare clară și ghidată.',
+  '1. Pick an event': '1. Alege un eveniment',
+  'Choose the event type that matches your celebration.':
+    'Alege tipul de eveniment care se potrivește sărbătorii tale.',
+  '2. Select the date and time': '2. Selectează data și ora',
+  'Pick the perfect slot for your guests and schedule.':
+    'Alege intervalul ideal pentru invitați și pentru programul tău.',
+  '3. Tell us the number of guests': '3. Spune-ne numărul de invitați',
+  'Share your estimated guest count and any special requests.':
+    'Spune-ne numărul estimat de invitați și orice cerințe speciale.',
+  'And you are all set. We will do the rest for you!':
+    'Și gata! Noi ne ocupăm de restul pentru tine!',
   'Event Types': 'Tipuri de evenimente',
   'Weddings, birthdays, corporate, holidays, and more.': 'Nuni, zile de naștere, evenimente corporate, sărbători și multe altele.',
   'Smart Booking': 'Rezervare inteligentă',
@@ -215,5 +234,58 @@ export const roDict: Record<string, string> = {
   'Start Booking Process': 'Începe procesul de rezervare',
   'Submit Booking Request': 'Trimite cererea de rezervare',
   Cancel: 'Anulează',
+  'Book Your Event': 'Rezervă evenimentul tău',
+  'Fill out the form below to request a booking. Our team will review your request and confirm availability within 24 hours.':
+    'Completează formularul de mai jos pentru a trimite o cerere de rezervare. Echipa noastră va analiza cererea și va confirma disponibilitatea în maximum 24 de ore.',
+  'Event Details': 'Detalii eveniment',
+  'Tell us about your event': 'Spune-ne despre evenimentul tău',
+  'Event Type': 'Tip eveniment',
+  'Select event type': 'Selectează tipul evenimentului',
+  'Starting at': 'Începând de la',
+  'Event Date': 'Data evenimentului',
+  'Start Time': 'Ora de începere',
+  'Select time': 'Selectează ora',
+  Duration: 'Durată',
+  'Select duration': 'Selectează durata',
+  'Guest Count': 'Număr invitați',
+  'Max capacity': 'Capacitate maximă',
+  'Special Requests (Optional)': 'Cerințe speciale (opțional)',
+  'Any special requirements, dietary restrictions, accessibility needs, etc.':
+    'Orice cerințe speciale, restricții alimentare, nevoi de accesibilitate etc.',
+  'Booking Summary': 'Rezumat rezervare',
+  Date: 'Data',
+  Guests: 'Invitați',
+  people: 'persoane',
+  'Estimated Total': 'Total estimat',
+  'Final price may vary based on additional services and requirements.':
+    'Prețul final poate varia în funcție de serviciile suplimentare și de cerințe.',
+  'Select an event type to see pricing details':
+    'Selectează un tip de eveniment pentru a vedea detaliile de preț.',
+  'Need Help?': 'Ai nevoie de ajutor?',
+  "Have questions about your booking? We're here to help!":
+    'Ai întrebări despre rezervare? Suntem aici să te ajutăm!',
+  Email: 'Email',
+  Phone: 'Telefon',
+  Hours: 'Program',
+  'Mon-Fri, 9 AM - 6 PM': 'Lun-Vin, 09:00 - 18:00',
+  '1 hour': '1 oră',
+  '2 hours': '2 ore',
+  '4 hours': '4 ore',
+  'Full day (8 hours)': 'Zi completă (8 ore)',
+  'Please select an event type': 'Te rugăm să selectezi un tip de eveniment',
+  'Please select a date': 'Te rugăm să selectezi o dată',
+  'Please select a start time': 'Te rugăm să selectezi ora de începere',
+  'Please select duration': 'Te rugăm să selectezi durata',
+  'Please enter guest count': 'Te rugăm să introduci numărul de invitați',
+  'Guest count must be at least 1': 'Numărul de invitați trebuie să fie cel puțin 1',
+  'Maximum capacity for': 'Capacitatea maximă pentru',
+  is: 'este',
+  'Cannot book events in the past': 'Nu poți rezerva evenimente în trecut',
+  'You must be logged in to create a booking.':
+    'Trebuie să fii autentificat pentru a crea o rezervare.',
+  'Booking created successfully! Waiting for admin approval.':
+    'Rezervarea a fost creată cu succes! Se așteaptă aprobarea administratorului.',
+  'Could not create booking right now. Please try again.':
+    'Rezervarea nu a putut fi creată acum. Te rugăm să încerci din nou.',
 };
 

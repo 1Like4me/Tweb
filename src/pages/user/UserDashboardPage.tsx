@@ -2,36 +2,30 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
-
-interface Booking {
-  id: string;
-  userId: string;
-  eventType: string;
-  eventDate: string;
-  startTime: string;
-  duration: number;
-  guestCount: number;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  totalPrice: number;
-  createdAt: string;
-}
+import { Booking } from '../../types/models';
+import { useAuth } from '../../hooks/useAuth';
+import { bookingService } from '../../services/bookingService';
 
 export const UserDashboardPage = () => {
-  const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+  const { user } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
 
   useEffect(() => {
-    loadBookings();
-  }, []);
+    if (!user?.id) {
+      setBookings([]);
+      return;
+    }
 
-  const loadBookings = () => {
-    const allBookings = JSON.parse(localStorage.getItem('venue_bookings') || '[]');
-    const userBookings = allBookings.filter((b: Booking) => b.userId === currentUser.id);
-    setBookings(userBookings);
-  };
+    bookingService
+      .getBookings(user.id)
+      .then(setBookings)
+      .catch(() => setBookings([]));
+  }, [user?.id]);
 
-  const upcomingBookings = bookings.filter(b => 
-    b.status !== 'cancelled' && new Date(b.eventDate) >= new Date()
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcomingBookings = bookings.filter(b =>
+    b.status !== 'cancelled' && new Date(b.eventDate) >= today
   ).sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
 
   const recentBookings = [...bookings]
@@ -55,7 +49,7 @@ export const UserDashboardPage = () => {
     <div className="space-y-8">
       <section>
         <h1 className="text-3xl font-semibold text-slate-50 sm:text-4xl">
-          Welcome back, {currentUser.firstName}! 👋
+          Welcome back, {user?.firstName ?? 'Guest'}! 👋
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-slate-300">
           Here's an overview of your bookings and account activity.
@@ -168,23 +162,25 @@ export const UserDashboardPage = () => {
             <div className="space-y-3 text-sm">
               <div>
                 <p className="text-slate-500 text-xs">Name</p>
-                <p className="text-slate-200">{currentUser.firstName} {currentUser.lastName}</p>
+                <p className="text-slate-200">{user?.firstName} {user?.lastName}</p>
               </div>
               <div>
                 <p className="text-slate-500 text-xs">Email</p>
-                <p className="text-slate-200">{currentUser.email}</p>
+                <p className="text-slate-200">{user?.email}</p>
               </div>
               <div>
                 <p className="text-slate-500 text-xs">Phone</p>
-                <p className="text-slate-200">{currentUser.phone || 'Not provided'}</p>
+                <p className="text-slate-200">{user?.phone || 'Not provided'}</p>
               </div>
               <div>
                 <p className="text-slate-500 text-xs">Member Since</p>
                 <p className="text-slate-200">
-                  {new Date(currentUser.createdAt).toLocaleDateString('en-US', {
-                    month: 'long',
-                    year: 'numeric'
-                  })}
+                  {user?.createdAt
+                    ? new Date(user.createdAt).toLocaleDateString('en-US', {
+                        month: 'long',
+                        year: 'numeric'
+                      })
+                    : 'N/A'}
                 </p>
               </div>
             </div>
