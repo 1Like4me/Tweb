@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApp.BusinessLayer;
+using MyApp.Domain.Entities;
 using MyApp.Domain.Models.User;
 
 namespace MyApp.API.Controllers;
@@ -29,7 +30,7 @@ public class UsersController : ControllerBase
             var dtos = await userAction.GetAllUsersActionAsync(cancellationToken);
             return Ok(dtos);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving users." });
         }
@@ -59,7 +60,7 @@ public class UsersController : ControllerBase
 
             return Ok(dto);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving the user." });
         }
@@ -89,7 +90,7 @@ public class UsersController : ControllerBase
 
             return Ok(dto);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving your profile." });
         }
@@ -122,7 +123,7 @@ public class UsersController : ControllerBase
             var detail = await userAction.CreateUserActionAsync(entity, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = detail.Id }, detail);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while creating the user." });
         }
@@ -172,7 +173,7 @@ public class UsersController : ControllerBase
 
             return NoContent();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while updating the user." });
         }
@@ -196,10 +197,13 @@ public class UsersController : ControllerBase
 
             return NoContent();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while deleting the user." });
         }
     }
 }
+
+
+
 

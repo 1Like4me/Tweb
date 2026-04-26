@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApp.BusinessLayer;
+using MyApp.Domain.Entities;
 using MyApp.Domain.Models.Project;
 
 namespace MyApp.API.Controllers;
@@ -28,7 +29,7 @@ public class ProjectsController : ControllerBase
             var dtos = await projectAction.GetAllProjectsActionAsync(cancellationToken);
             return Ok(dtos);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving projects." });
         }
@@ -51,7 +52,7 @@ public class ProjectsController : ControllerBase
 
             return Ok(dto);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving the project." });
         }
@@ -75,7 +76,7 @@ public class ProjectsController : ControllerBase
             var detail = await projectAction.CreateProjectActionAsync(entity, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = detail.Id }, detail);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while creating the project." });
         }
@@ -119,7 +120,7 @@ public class ProjectsController : ControllerBase
 
             return NoContent();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while updating the project." });
         }
@@ -156,10 +157,13 @@ public class ProjectsController : ControllerBase
 
             return NoContent();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while deleting the project." });
         }
     }
 }
+
+
+
 

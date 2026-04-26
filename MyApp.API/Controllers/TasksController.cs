@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApp.BusinessLayer;
+using MyApp.Domain.Entities;
 using MyApp.Domain.Models.TaskItem;
 
 namespace MyApp.API.Controllers;
@@ -28,7 +29,7 @@ public class TasksController : ControllerBase
             var dtos = await taskAction.GetAllTaskItemsActionAsync(cancellationToken);
             return Ok(dtos);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving tasks." });
         }
@@ -51,7 +52,7 @@ public class TasksController : ControllerBase
 
             return Ok(dto);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving the task." });
         }
@@ -70,7 +71,7 @@ public class TasksController : ControllerBase
                 ProjectId = dto.ProjectId,
                 AssignedUserId = dto.AssignedUserId,
                 Title = dto.Title,
-                Description = dto.Description,
+                Description = dto.Description ?? string.Empty,
                 Priority = dto.Priority,
                 Status = dto.Status,
                 DueDate = dto.DueDate.HasValue ? DateOnly.Parse(dto.DueDate.Value.ToString("yyyy-MM-dd")) : null
@@ -85,7 +86,7 @@ public class TasksController : ControllerBase
 
             return CreatedAtAction(nameof(GetById), new { id = detail.Id }, detail);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while creating the task." });
         }
@@ -112,7 +113,7 @@ public class TasksController : ControllerBase
                 ProjectId = existing.ProjectId,
                 AssignedUserId = existing.AssignedUserId,
                 Title = dto.Title,
-                Description = dto.Description,
+                Description = dto.Description ?? string.Empty,
                 Priority = dto.Priority,
                 Status = dto.Status,
                 DueDate = dto.DueDate.HasValue ? DateOnly.Parse(dto.DueDate.Value.ToString("yyyy-MM-dd")) : null
@@ -126,7 +127,7 @@ public class TasksController : ControllerBase
 
             return NoContent();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while updating the task." });
         }
@@ -149,10 +150,13 @@ public class TasksController : ControllerBase
 
             return NoContent();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while deleting the task." });
         }
     }
 }
+
+
+
 

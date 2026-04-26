@@ -17,7 +17,7 @@ export const HomePage = () => {
           </h1>
           <p className="mt-4 max-w-xl text-sm text-slate-300">
             {t(
-              'Manage weddings, corporate events, anniversaries, and more in a single, intuitive dashboard. This demo frontend showcases a complete booking experience built with React and TypeScript.'
+              'Manage weddings, corporate events, anniversaries, and more in a single, intuitive dashboard.'
             )}
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -40,10 +40,6 @@ export const HomePage = () => {
             <div>
               <dt className="font-semibold text-slate-100">{t('Smart Booking')}</dt>
               <dd>{t('Calendar, time slots, pricing, and availability.')}</dd>
-            </div>
-            <div>
-              <dt className="font-semibold text-slate-100">{t('Admin Control')}</dt>
-              <dd>{t('Manage users, bookings, and venue settings.')}</dd>
             </div>
           </dl>
         </div>
@@ -86,36 +82,40 @@ export const HomePage = () => {
         </Card>
       </section>
 
-      <section className="grid gap-6 md:grid-cols-3">
+      <section>
         <Card
-          title={t('For Guests')}
-          subtitle={t('A seamless experience for your clients.')}
+          title={t('Your event is just a few clicks away')}
+          subtitle={t('Simple booking flow, elegant results.')}
+          className="border-brand-500/40"
         >
-          <ul className="space-y-2 text-xs text-slate-300">
-            <li>{t('• Browse venue details and curated event packages.')}</li>
-            <li>{t('• Book events with live availability and pricing.')}</li>
-            <li>{t('• Manage bookings directly from a personal dashboard.')}</li>
-          </ul>
-        </Card>
-        <Card
-          title={t('For Administrators')}
-          subtitle={t('Full control over bookings and configuration.')}
-        >
-          <ul className="space-y-2 text-xs text-slate-300">
-            <li>{t('• Review, approve, or cancel bookings.')}</li>
-            <li>{t('• Manage users and their access roles.')}</li>
-            <li>{t('• Adjust capacity, time slots, and pricing.')}</li>
-          </ul>
-        </Card>
-        <Card
-          title={t('For Academics')}
-          subtitle={t('Designed to match React + TS lab criteria.')}
-        >
-          <ul className="space-y-2 text-xs text-slate-300">
-            <li>{t('• Strict TypeScript models and services.')}</li>
-            <li>{t('• Mock authentication and protected routes.')}</li>
-            <li>{t('• CRUD, validation, search, filter, and error pages.')}</li>
-          </ul>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-300">
+              {t('Plan your celebration in minutes with a smooth and guided booking experience.')}
+            </p>
+            <div className="grid gap-3 text-sm sm:grid-cols-2">
+              <div className="rounded-xl border border-slate-700/70 bg-slate-900/40 p-3 text-slate-200">
+                <p className="font-semibold text-brand-300">{t('1. Pick an event')}</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {t('Choose the event type that matches your celebration.')}
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-700/70 bg-slate-900/40 p-3 text-slate-200">
+                <p className="font-semibold text-brand-300">{t('2. Select the date and time')}</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {t('Pick the perfect slot for your guests and schedule.')}
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-700/70 bg-slate-900/40 p-3 text-slate-200 sm:col-span-2">
+                <p className="font-semibold text-brand-300">{t('3. Tell us the number of guests')}</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {t('Share your estimated guest count and any special requests.')}
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-200">
+              {t('And you are all set. We will do the rest for you!')}
+            </p>
+          </div>
         </Card>
       </section>
     </div>

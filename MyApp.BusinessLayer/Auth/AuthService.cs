@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using MyApp.DataAccess;
-using MyApp.Domain;
+using MyApp.Domain.Entities;
 
 namespace MyApp.BusinessLayer.Auth;
 

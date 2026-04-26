@@ -1,4 +1,4 @@
-using MyApp.Domain;
+using MyApp.Domain.Entities;
 
 namespace MyApp.BusinessLayer.Crud;
 
