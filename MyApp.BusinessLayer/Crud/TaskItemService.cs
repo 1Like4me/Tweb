@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MyApp.DataAccess;
-using MyApp.Domain;
+using MyApp.Domain.Entities;
 
 namespace MyApp.BusinessLayer.Crud;
 
@@ -39,7 +39,7 @@ public class TaskItemService : ITaskItemService
             return null;
         }
 
-        existing.Name = task.Name;
+        existing.Title = task.Title;
         existing.ProjectId = task.ProjectId;
 
         await _db.SaveChangesAsync(cancellationToken);

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApp.BusinessLayer;
+using MyApp.Domain.Entities;
 using MyApp.Domain.Models.Booking;
 
 namespace MyApp.API.Controllers;
@@ -38,7 +39,7 @@ public class BookingsController : ControllerBase
             var dtos = await bookingAction.GetAllBookingsActionAsync(effectiveUserId, cancellationToken);
             return Ok(dtos);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving bookings." });
         }
@@ -68,7 +69,7 @@ public class BookingsController : ControllerBase
 
             return Ok(dto);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving the booking." });
         }
@@ -114,7 +115,7 @@ public class BookingsController : ControllerBase
 
             return CreatedAtAction(nameof(GetById), new { id = detail.Id }, detail);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while creating the booking." });
         }
@@ -168,7 +169,7 @@ public class BookingsController : ControllerBase
 
             return Ok(updated);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while updating the booking." });
         }
@@ -213,7 +214,7 @@ public class BookingsController : ControllerBase
 
             return Ok(updated);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while updating booking status." });
         }
@@ -250,9 +251,12 @@ public class BookingsController : ControllerBase
 
             return NoContent();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while deleting the booking." });
         }
     }
 }
+
+
+

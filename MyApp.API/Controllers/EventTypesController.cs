@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApp.BusinessLayer;
+using MyApp.Domain.Entities;
 using MyApp.Domain.Models.EventType;
 
 namespace MyApp.API.Controllers;
@@ -28,7 +29,7 @@ public class EventTypesController : ControllerBase
             var dtos = await eventTypeAction.GetAllEventTypesActionAsync(cancellationToken);
             return Ok(dtos);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving event types." });
         }
@@ -51,7 +52,7 @@ public class EventTypesController : ControllerBase
 
             return Ok(dto);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while retrieving the event type." });
         }
@@ -78,7 +79,7 @@ public class EventTypesController : ControllerBase
             var detail = await eventTypeAction.CreateEventTypeActionAsync(entity, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = detail.Id }, detail);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while creating the event type." });
         }
@@ -117,7 +118,7 @@ public class EventTypesController : ControllerBase
 
             return NoContent();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while updating the event type." });
         }
@@ -141,9 +142,12 @@ public class EventTypesController : ControllerBase
 
             return NoContent();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while deleting the event type." });
         }
     }
 }
+
+
+

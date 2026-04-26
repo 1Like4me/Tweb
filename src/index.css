@@ -77,6 +77,30 @@ body {
   box-shadow: var(--neu-shadow-inset);
 }
 
+select.input,
+.neu-input-shell select,
+input[type='date'].input {
+  color-scheme: dark;
+}
+
+select.input option,
+.neu-input-shell select option {
+  color: #e2e8f0;
+  background-color: #0c0f16;
+}
+
+select.input option:checked,
+.neu-input-shell select option:checked {
+  color: #f8fafc;
+  background: #1e3a8a;
+}
+
+input[type='date'].input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.85) sepia(0.2) saturate(0.6) hue-rotate(175deg);
+  opacity: 0.9;
+}
+
 .neu-modal-surface {
   @apply rounded-3xl border border-slate-900/70;
   background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.06), transparent 60%),

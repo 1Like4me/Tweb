@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MyApp.DataAccess;
-using MyApp.Domain;
+using MyApp.Domain.Entities;
 
 namespace MyApp.BusinessLayer.Crud;
 
