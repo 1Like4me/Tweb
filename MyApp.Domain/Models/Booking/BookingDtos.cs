@@ -30,6 +30,8 @@ public class BookingCreateDto
 
     [StringLength(500, ErrorMessage = "SpecialRequests cannot exceed 500 characters.")]
     public string? SpecialRequests { get; set; }
+
+    public string? CustomMenu { get; set; }
 }
 
 public class BookingUpdateDto
@@ -56,6 +58,8 @@ public class BookingUpdateDto
 
     [StringLength(500, ErrorMessage = "SpecialRequests cannot exceed 500 characters.")]
     public string? SpecialRequests { get; set; }
+
+    public string? CustomMenu { get; set; }
 }
 
 public class BookingStatusUpdateDto
@@ -76,6 +80,7 @@ public class BookingDetailDto
     public int Duration { get; set; }
     public int GuestCount { get; set; }
     public string? SpecialRequests { get; set; }
+    public string? CustomMenu { get; set; }
     public string Status { get; set; } = "pending";
     public decimal TotalPrice { get; set; }
     public DateTime CreatedAt { get; set; }

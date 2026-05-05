@@ -30,16 +30,6 @@ public class BusinessLogic : IBusinessLogic
         return new UserActionExecution(_db);
     }
 
-    public IProjectAction ProjectAction()
-    {
-        return new ProjectActionExecution(_db);
-    }
-
-    public ITaskItemAction TaskItemAction()
-    {
-        return new TaskItemActionExecution(_db);
-    }
-
     public IEventTypeAction EventTypeAction()
     {
         return new EventTypeActionExecution(_db);

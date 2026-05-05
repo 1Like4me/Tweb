@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Booking } from '../../types/models';
@@ -8,6 +8,7 @@ import { bookingService } from '../../services/bookingService';
 
 export const MyBookingsPage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('all');
@@ -177,14 +178,28 @@ export const MyBookingsPage = () => {
                 </div>
 
                 {booking.specialRequests && (
-                  <div className="mb-4 p-3 bg-slate-900/50 rounded text-xs">
+                  <div className="mb-2 p-3 bg-slate-900/50 rounded text-xs">
                     <p className="text-slate-400 mb-1">Special Requests:</p>
                     <p className="text-slate-300">{booking.specialRequests}</p>
                   </div>
                 )}
 
+                {booking.customMenu && (
+                  <div className="mb-4 p-3 bg-brand-900/10 border border-brand-500/20 rounded text-xs">
+                    <p className="text-brand-400 font-semibold mb-1">Customized Menu:</p>
+                    <p className="text-slate-300 italic">{booking.customMenu}</p>
+                  </div>
+                )}
+
                 {booking.status === 'pending' && (
                   <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() => navigate('/booking', { state: { editBooking: booking } })}
+                    >
+                      Edit Booking
+                    </Button>
                     <Button
                       size="sm"
                       variant="danger"

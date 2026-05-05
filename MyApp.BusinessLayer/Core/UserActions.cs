@@ -43,6 +43,12 @@ public class UserActions
         }
 
         existing.Username = user.Username;
+        existing.Email = user.Email;
+        existing.FirstName = user.FirstName;
+        existing.LastName = user.LastName;
+        existing.PhoneNumber = user.PhoneNumber;
+        existing.ProfilePictureUrl = user.ProfilePictureUrl;
+
         await _db.SaveChangesAsync(cancellationToken);
         return MapUserToDetailDto(existing);
     }
@@ -66,6 +72,12 @@ public class UserActions
         {
             Id = user.Id,
             Username = user.Username,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            PhoneNumber = user.PhoneNumber,
+            ProfilePictureUrl = user.ProfilePictureUrl,
+            IsEmailVerified = user.IsEmailVerified,
             Role = user.Role.ToString(),
             CreatedAt = user.CreatedAt
         };

@@ -11,6 +11,11 @@ interface AuthSession {
 interface UserApiDto {
   id: number;
   username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  profilePictureUrl?: string;
   role: string;
   createdAt: string;
 }
@@ -27,15 +32,23 @@ const getSession = (): AuthSession | null => {
   return readJson<AuthSession | null>(STORAGE_KEYS.auth, null);
 };
 
+export const updateLocalUser = (updatedUser: User): void => {
+  const session = getSession();
+  if (session) {
+    saveSession({ ...session, user: updatedUser });
+  }
+};
+
 const mapCurrentUser = (dto: UserApiDto): User => {
   const normalizedRole = dto.role.toLowerCase() === 'admin' ? 'admin' : 'user';
   return {
     id: String(dto.id),
-    email: dto.username.trim().toLowerCase(),
+    email: dto.email || dto.username,
     password: '',
-    firstName: normalizedRole === 'admin' ? 'Admin' : 'User',
-    lastName: 'Account',
-    phone: '',
+    firstName: dto.firstName,
+    lastName: dto.lastName,
+    phone: dto.phoneNumber,
+    profilePictureUrl: dto.profilePictureUrl,
     role: normalizedRole,
     createdAt: dto.createdAt
   };
@@ -63,20 +76,14 @@ export const authService = {
   async register(data: RegisterData): Promise<User> {
     await api.post('/api/auth/register', {
       username: data.email,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      phoneNumber: data.phone,
       password: data.password
     });
     const user = await this.login({ email: data.email, password: data.password });
-    const enriched = {
-      ...user,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      phone: data.phone
-    };
-    const session = getSession();
-    if (session) {
-      saveSession({ ...session, user: enriched });
-    }
-    return enriched;
+    return user;
   },
 
   logout(): void {

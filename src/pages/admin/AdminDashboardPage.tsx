@@ -53,6 +53,13 @@ export const AdminDashboardPage = () => {
       .catch(() => undefined);
   };
 
+  const handleRoleChange = (userId: string, newRole: 'user' | 'admin') => {
+    userService
+      .changeUserRole(userId, newRole)
+      .then(() => loadData())
+      .catch(() => undefined);
+  };
+
   const getUserById = (userId: string) => {
     return users.find(u => u.id === userId);
   };
@@ -224,9 +231,16 @@ export const AdminDashboardPage = () => {
                     </div>
 
                     {booking.specialRequests && (
-                      <div className="mb-4 p-3 bg-slate-900/50 rounded text-xs">
+                      <div className="mb-2 p-3 bg-slate-900/50 rounded text-xs">
                         <p className="text-slate-400 mb-1">Special Requests:</p>
                         <p className="text-slate-300">{booking.specialRequests}</p>
+                      </div>
+                    )}
+
+                    {booking.customMenu && (
+                      <div className="mb-4 p-3 bg-brand-900/10 border border-brand-500/20 rounded text-xs">
+                        <p className="text-brand-400 font-semibold mb-1">Customized Menu:</p>
+                        <p className="text-slate-300 italic">{booking.customMenu}</p>
                       </div>
                     )}
 
@@ -299,13 +313,32 @@ export const AdminDashboardPage = () => {
                         {new Date(user.createdAt).toLocaleDateString()}
                       </td>
                       <td className="py-3 px-4">
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          onClick={() => handleDeleteUser(user.id)}
-                        >
-                          Delete
-                        </Button>
+                        <div className="flex gap-2">
+                          {user.role === 'admin' ? (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => handleRoleChange(user.id, 'user')}
+                            >
+                              Demote
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="primary"
+                              onClick={() => handleRoleChange(user.id, 'admin')}
+                            >
+                              Promote
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={() => handleDeleteUser(user.id)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
