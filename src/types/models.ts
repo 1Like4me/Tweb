@@ -7,6 +7,8 @@ export interface User {
   firstName: string;
   lastName: string;
   phone: string;
+  profilePictureUrl?: string;
+  isEmailVerified?: boolean;
   role: UserRole;
   createdAt: string;
 }
@@ -16,6 +18,7 @@ export type BookingStatus = 'pending' | 'confirmed' | 'cancelled';
 export interface Booking {
   id: string;
   userId: string;
+  eventTypeId?: string;
   eventType: string;
   eventDate: string;
   startTime: string;

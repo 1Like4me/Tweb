@@ -17,6 +17,7 @@ public class Booking
     public int Duration { get; set; }
     public int GuestCount { get; set; }
     public string? SpecialRequests { get; set; }
+    public string? CustomMenu { get; set; }
     public BookingStatus Status { get; set; }
     public decimal TotalPrice { get; set; }
     public DateTime CreatedAt { get; set; }
