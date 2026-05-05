@@ -5,6 +5,7 @@ import { Button } from '../../components/common/Button';
 import { Booking } from '../../types/models';
 import { useAuth } from '../../hooks/useAuth';
 import { bookingService } from '../../services/bookingService';
+import { EditProfileModal } from '../../components/common/EditProfileModal';
 
 export const UserDashboardPage = () => {
   const { user } = useAuth();
@@ -47,13 +48,26 @@ export const UserDashboardPage = () => {
 
   return (
     <div className="space-y-8">
-      <section>
-        <h1 className="text-3xl font-semibold text-slate-50 sm:text-4xl">
-          Welcome back, {user?.firstName ?? 'Guest'}! 👋
-        </h1>
-        <p className="mt-3 max-w-3xl text-sm text-slate-300">
-          Here's an overview of your bookings and account activity.
-        </p>
+      <section className="flex items-center space-x-4">
+        {user?.profilePictureUrl ? (
+          <img 
+            src={user.profilePictureUrl} 
+            alt="Profile" 
+            className="w-16 h-16 rounded-full object-cover border-2 border-brand-500/50"
+          />
+        ) : (
+          <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-xl font-bold text-slate-400 border-2 border-slate-700">
+            {user?.firstName?.charAt(0) || 'G'}
+          </div>
+        )}
+        <div>
+          <h1 className="text-3xl font-semibold text-slate-50 sm:text-4xl">
+            Welcome back, {user?.firstName ?? 'Guest'}! 👋
+          </h1>
+          <p className="mt-2 max-w-3xl text-sm text-slate-300">
+            Here's an overview of your bookings and account activity.
+          </p>
+        </div>
       </section>
 
       <div className="grid gap-6 md:grid-cols-4">
@@ -158,7 +172,14 @@ export const UserDashboardPage = () => {
             </div>
           </Card>
 
-          <Card title="Account Info">
+          <Card 
+            title="Account Info"
+            actions={
+              <Button size="sm" variant="ghost" onClick={() => setIsEditProfileOpen(true)}>
+                Edit Profile
+              </Button>
+            }
+          >
             <div className="space-y-3 text-sm">
               <div>
                 <p className="text-slate-500 text-xs">Name</p>
@@ -218,3 +239,4 @@ export const UserDashboardPage = () => {
     </div>
   );
 };
+

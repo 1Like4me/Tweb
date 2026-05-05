@@ -8,6 +8,7 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { BookingPage } from './pages/bookings/BookingPage';
 import { UserDashboardPage } from './pages/user/UserDashboardPage';
+import { EditProfilePage } from './pages/user/EditProfilePage';
 import { MyBookingsPage } from './pages/bookings/MyBookingsPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { UnauthorizedPage } from './pages/errors/UnauthorizedPage';
@@ -47,6 +48,14 @@ function App() {
           }
         />
         <Route
+          path="/profile"
+          element={
+            <RequireAuth>
+              <EditProfilePage />
+            </RequireAuth>
+          }
+        />
+        <Route
           path="/my-bookings"
           element={
             <RequireAuth>
@@ -79,4 +88,3 @@ function App() {
 }
 
 export default App;
-

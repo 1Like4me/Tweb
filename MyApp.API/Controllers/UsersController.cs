@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MyApp.BusinessLayer;
+using MyApp.DataAccess;
 using MyApp.Domain.Entities;
 using MyApp.Domain.Models.User;
 
@@ -12,10 +14,14 @@ namespace MyApp.API.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IBusinessLogic _businessLogic;
+    private readonly IWebHostEnvironment _env;
+    private readonly AppDbContext _db;
 
-    public UsersController(IBusinessLogic businessLogic)
+    public UsersController(IBusinessLogic businessLogic, IWebHostEnvironment env, AppDbContext db)
     {
         _businessLogic = businessLogic;
+        _env = env;
+        _db = db;
     }
 
     [HttpGet]
@@ -113,6 +119,11 @@ public class UsersController : ControllerBase
             var entity = new User
             {
                 Username = dto.Username,
+                Email = string.IsNullOrWhiteSpace(dto.Email) ? dto.Username : dto.Email,
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                PhoneNumber = dto.PhoneNumber,
+                ProfilePictureUrl = dto.ProfilePictureUrl,
                 PasswordHash = "external-auth-user",
                 Role = dto.Username.Equals("admin@venue.com", StringComparison.OrdinalIgnoreCase)
                     ? UserRole.Admin
@@ -150,32 +161,56 @@ public class UsersController : ControllerBase
                 return BadRequest(new { message = "Username is required." });
             }
 
-            var userAction = _businessLogic.UserAction();
-            var existing = await userAction.GetUserByIdActionAsync(id, cancellationToken);
+            var existing = await _db.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
             if (existing is null)
             {
                 return NotFound(new { message = "User not found." });
             }
 
-            var entity = new User
+            // If email is changed, they must verify again
+            if (existing.Email != dto.Email)
             {
-                Id = id,
-                Username = dto.Username,
-                PasswordHash = existing.Role == "admin" ? "admin" : "user", // Preserve existing hash
-                Role = existing.Role == "admin" ? UserRole.Admin : UserRole.User
-            };
-
-            var updated = await userAction.UpdateUserActionAsync(entity, cancellationToken);
-            if (updated is null)
-            {
-                return NotFound(new { message = "User not found." });
+                existing.IsEmailVerified = false;
+                existing.EmailVerificationCode = null;
             }
+
+            existing.Username = dto.Username;
+            existing.Email = dto.Email;
+            existing.FirstName = dto.FirstName;
+            existing.LastName = dto.LastName;
+            existing.PhoneNumber = dto.PhoneNumber;
+            existing.ProfilePictureUrl = dto.ProfilePictureUrl;
+
+            await _db.SaveChangesAsync(cancellationToken);
 
             return NoContent();
         }
         catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while updating the user." });
+        }
+    }
+
+    [HttpPut("{id:int}/role")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateRole(int id, [FromBody] UserRoleUpdateDto dto, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+            if (user == null)
+                return NotFound(new { message = "User not found." });
+
+            user.Role = dto.Role.ToLower() == "admin" ? UserRole.Admin : UserRole.User;
+            await _db.SaveChangesAsync(cancellationToken);
+
+            return NoContent();
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while updating the user role." });
         }
     }
 
@@ -202,7 +237,106 @@ public class UsersController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while deleting the user." });
         }
     }
+
+    [HttpPost("{id:int}/upload-picture")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UploadProfilePicture(int id, IFormFile file, CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin && (!int.TryParse(userIdClaim, out var callerId) || callerId != id))
+        {
+            return Forbid();
+        }
+
+        if (file == null || file.Length == 0)
+            return BadRequest(new { message = "No file uploaded." });
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+        if (user == null)
+            return NotFound(new { message = "User not found." });
+
+        var uploadsFolder = Path.Combine(_env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), "uploads", "users");
+        if (!Directory.Exists(uploadsFolder))
+            Directory.CreateDirectory(uploadsFolder);
+
+        var fileExtension = Path.GetExtension(file.FileName);
+        var uniqueFileName = $"user_{id}_{Guid.NewGuid()}{fileExtension}";
+        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream, cancellationToken);
+        }
+
+        var request = HttpContext.Request;
+        var baseUrl = $"{request.Scheme}://{request.Host}{request.PathBase}";
+        var fileUrl = $"{baseUrl}/uploads/users/{uniqueFileName}";
+
+        user.ProfilePictureUrl = fileUrl;
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return Ok(new { url = fileUrl });
+    }
+
+    [HttpPost("{id:int}/send-verification")]
+    public async Task<IActionResult> SendVerificationEmail(int id, CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin && (!int.TryParse(userIdClaim, out var callerId) || callerId != id))
+        {
+            return Forbid();
+        }
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+        if (user == null)
+            return NotFound(new { message = "User not found." });
+
+        if (user.IsEmailVerified)
+            return BadRequest(new { message = "Email is already verified." });
+
+        // Generate a 6-digit code
+        var code = new Random().Next(100000, 999999).ToString();
+        user.EmailVerificationCode = code;
+        await _db.SaveChangesAsync(cancellationToken);
+
+        // Simulate sending email by writing to console
+        Console.WriteLine($"[EMAIL MOCK] To: {user.Email}, Subject: Verify your email, Body: Your verification code is: {code}");
+
+        return Ok(new { message = "Verification code sent.", mockCode = code }); // Included mockCode for easier frontend demo purposes
+    }
+
+    [HttpPost("{id:int}/verify-email")]
+    public async Task<IActionResult> VerifyEmail(int id, [FromBody] EmailVerificationDto dto, CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin && (!int.TryParse(userIdClaim, out var callerId) || callerId != id))
+        {
+            return Forbid();
+        }
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+        if (user == null)
+            return NotFound(new { message = "User not found." });
+
+        if (user.IsEmailVerified)
+            return BadRequest(new { message = "Email is already verified." });
+
+        if (user.EmailVerificationCode != dto.Code)
+            return BadRequest(new { message = "Invalid verification code." });
+
+        user.IsEmailVerified = true;
+        user.EmailVerificationCode = null;
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return Ok(new { message = "Email verified successfully." });
+    }
 }
+
 
 
 

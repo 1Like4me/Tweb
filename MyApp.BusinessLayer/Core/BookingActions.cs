@@ -77,6 +77,7 @@ public class BookingActions
         existing.Duration = booking.Duration;
         existing.GuestCount = booking.GuestCount;
         existing.SpecialRequests = booking.SpecialRequests;
+        existing.CustomMenu = booking.CustomMenu;
         existing.TotalPrice = CalculateTotalPrice(eventType.BasePrice, existing.Duration, existing.GuestCount);
 
         await _db.SaveChangesAsync(cancellationToken);
@@ -127,6 +128,7 @@ public class BookingActions
             Duration = booking.Duration,
             GuestCount = booking.GuestCount,
             SpecialRequests = booking.SpecialRequests,
+            CustomMenu = booking.CustomMenu,
             Status = booking.Status.ToString().ToLower(),
             TotalPrice = booking.TotalPrice,
             CreatedAt = booking.CreatedAt

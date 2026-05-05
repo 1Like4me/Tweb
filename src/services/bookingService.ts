@@ -11,6 +11,7 @@ interface BookingApiDto {
   duration: number;
   guestCount: number;
   specialRequests?: string;
+  customMenu?: string;
   status: BookingStatus;
   totalPrice: number;
   createdAt: string;
@@ -19,12 +20,14 @@ interface BookingApiDto {
 const mapBooking = (dto: BookingApiDto): Booking => ({
   id: String(dto.id),
   userId: String(dto.userId),
+  eventTypeId: String(dto.eventTypeId),
   eventType: dto.eventTypeName,
   eventDate: dto.eventDate,
   startTime: dto.startTime,
   duration: dto.duration,
   guestCount: dto.guestCount,
   specialRequests: dto.specialRequests,
+  customMenu: dto.customMenu,
   status: dto.status,
   totalPrice: dto.totalPrice,
   createdAt: dto.createdAt
@@ -36,12 +39,13 @@ export const bookingService = {
   ): Promise<Booking> {
     const response = await api.post<BookingApiDto>('/api/bookings', {
       userId: Number(bookingData.userId),
-      eventTypeId: Number(bookingData.eventType),
+      eventTypeId: Number(bookingData.eventTypeId || bookingData.eventType),
       eventDate: bookingData.eventDate,
       startTime: bookingData.startTime,
       duration: bookingData.duration,
       guestCount: bookingData.guestCount,
-      specialRequests: bookingData.specialRequests
+      specialRequests: bookingData.specialRequests,
+      customMenu: bookingData.customMenu
     });
     return mapBooking(response.data);
   },
@@ -63,14 +67,15 @@ export const bookingService = {
   ): Promise<Booking> {
     const currentResponse = await api.get<BookingApiDto>(`/api/bookings/${id}`);
     const current = currentResponse.data;
-    const eventTypeId = Number(bookingData.eventType ?? current.eventTypeId);
+    const eventTypeId = Number(bookingData.eventTypeId || bookingData.eventType || current.eventTypeId);
     const payload = {
       eventTypeId: Number.isNaN(eventTypeId) ? 0 : eventTypeId,
       eventDate: bookingData.eventDate ?? current.eventDate,
       startTime: bookingData.startTime ?? current.startTime,
       duration: bookingData.duration ?? current.duration,
       guestCount: bookingData.guestCount ?? current.guestCount,
-      specialRequests: bookingData.specialRequests ?? current.specialRequests
+      specialRequests: bookingData.specialRequests ?? current.specialRequests,
+      customMenu: bookingData.customMenu ?? current.customMenu
     };
     const response = await api.put<BookingApiDto>(`/api/bookings/${id}`, payload);
     return mapBooking(response.data);

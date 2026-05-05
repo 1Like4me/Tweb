@@ -6,7 +6,7 @@ import {
   useMemo,
   useState
 } from 'react';
-import { authService } from '../services/authService';
+import { authService, updateLocalUser } from '../services/authService';
 import { LoginCredentials, RegisterData, User } from '../types/models';
 
 export interface AuthContextType {
@@ -19,6 +19,7 @@ export interface AuthContextType {
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   toggleRoleView: () => void;
+  updateUserContext: (user: User) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,6 +61,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsViewingAsUser((prev) => !prev);
   }, []);
 
+  const handleUpdateUserContext = useCallback((updatedUser: User) => {
+    setUser(updatedUser);
+    updateLocalUser(updatedUser);
+  }, []);
+
   const value = useMemo<AuthContextType>(
     () => ({
       user,
@@ -70,9 +76,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       register: handleRegister,
       logout: handleLogout,
       isViewingAsUser,
-      toggleRoleView: handleToggleRoleView
+      toggleRoleView: handleToggleRoleView,
+      updateUserContext: handleUpdateUserContext
     }),
-    [handleLogin, handleLogout, handleRegister, handleToggleRoleView, isViewingAsUser, user]
+    [handleLogin, handleLogout, handleRegister, handleToggleRoleView, handleUpdateUserContext, isViewingAsUser, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
