@@ -12,8 +12,6 @@ public class AppDbContext : DbContext
 
     public DbSet<HealthCheckEntry> HealthChecks => Set<HealthCheckEntry>();
     public DbSet<User> Users => Set<User>();
-    public DbSet<Project> Projects => Set<Project>();
-    public DbSet<TaskItem> Tasks => Set<TaskItem>();
     public DbSet<EventType> EventTypes => Set<EventType>();
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<ChatSession> ChatSessions => Set<ChatSession>();
@@ -22,18 +20,6 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        modelBuilder.Entity<Project>()
-            .HasOne(p => p.User)
-            .WithMany(u => u.Projects)
-            .HasForeignKey(p => p.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<TaskItem>()
-            .HasOne(t => t.Project)
-            .WithMany(p => p.Tasks)
-            .HasForeignKey(t => t.ProjectId)
-            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Booking>()
             .HasOne(b => b.User)
@@ -50,9 +36,6 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>().Property(u => u.Username).IsRequired();
         modelBuilder.Entity<User>().Property(u => u.PasswordHash).IsRequired();
         modelBuilder.Entity<User>().Property(u => u.Role).IsRequired();
-        modelBuilder.Entity<Project>().Property(p => p.Name).IsRequired();
-        modelBuilder.Entity<TaskItem>().Property(t => t.Title).IsRequired();
-        modelBuilder.Entity<TaskItem>().Property(t => t.Status).IsRequired();
         modelBuilder.Entity<EventType>().Property(e => e.Name).IsRequired();
         modelBuilder.Entity<EventType>().Property(e => e.Description).IsRequired();
         modelBuilder.Entity<Booking>().Property(b => b.Duration).IsRequired();

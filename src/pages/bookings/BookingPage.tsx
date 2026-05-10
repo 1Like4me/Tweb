@@ -1,26 +1,36 @@
 import { useEffect, useMemo, useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
 import { useAuth } from '../../hooks/useAuth';
 import { bookingService } from '../../services/bookingService';
 import { eventTypeService } from '../../services/eventTypeService';
 import { useI18n } from '../../i18n/i18n';
-import { EventType } from '../../types/models';
+import { Booking, EventType } from '../../types/models';
+import { menuPackages, allDishes } from '../../constants/menuData';
 
 export const BookingPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { t } = useI18n();
 
+  const editBooking = location.state?.editBooking as Booking | undefined;
+
   const [formData, setFormData] = useState({
-    eventType: '',
-    eventDate: '',
-    startTime: '',
-    duration: '',
-    guestCount: '',
-    specialRequests: ''
+    eventType: editBooking?.eventTypeId || '',
+    eventDate: editBooking?.eventDate || '',
+    startTime: editBooking?.startTime || '',
+    duration: editBooking?.duration?.toString() || '',
+    guestCount: editBooking?.guestCount?.toString() || '',
+    specialRequests: editBooking?.specialRequests || ''
   });
+
+  const [customMenu, setCustomMenu] = useState<string[]>(
+    editBooking?.customMenu ? editBooking.customMenu.split(', ') : []
+  );
+  const [showMenuCustomizer, setShowMenuCustomizer] = useState(false);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
@@ -49,10 +59,39 @@ export const BookingPage = () => {
     [eventTypes, formData.eventType]
   );
 
+  // Update custom menu when event type changes (if not already customized or editing)
+  useEffect(() => {
+    if (!editBooking && selectedEventType) {
+      const pkg = menuPackages.find(p => p.name.toLowerCase().includes(selectedEventType.name.toLowerCase()));
+      if (pkg) {
+        const items = pkg.sections.flatMap(s => s.items);
+        setCustomMenu(items);
+      }
+    }
+  }, [selectedEventType, editBooking]);
+
   const calculatePrice = () => {
     if (!selectedEventType || !formData.duration) return 0;
     const durationMultiplier = parseInt(formData.duration) / 4; // base price is for 4 hours
-    return Math.round(selectedEventType.basePrice * Math.max(durationMultiplier, 0.5));
+    let price = Math.round(selectedEventType.basePrice * Math.max(durationMultiplier, 0.5));
+    
+    // Add 50 for each custom addon that wasn't in the original menu
+    if (selectedEventType) {
+      const pkg = menuPackages.find(p => p.name.toLowerCase().includes(selectedEventType.name.toLowerCase()));
+      const originalItems = pkg ? pkg.sections.flatMap(s => s.items) : [];
+      const addonsCount = customMenu.filter(item => !originalItems.includes(item)).length;
+      price += addonsCount * 50;
+    }
+
+    return price;
+  };
+
+  const toggleMenuItem = (item: string) => {
+    setCustomMenu(prev => 
+      prev.includes(item) 
+        ? prev.filter(i => i !== item) 
+        : [...prev, item]
+    );
   };
 
   const validateForm = () => {
@@ -93,202 +132,273 @@ export const BookingPage = () => {
 
     setLoading(true);
 
-    // Simulate API call
     setTimeout(() => {
-      const newBooking = {
-        userId: user?.id ?? '',
-        eventType: selectedEventType?.id || formData.eventType,
-        eventDate: formData.eventDate,
-        startTime: formData.startTime,
-        duration: parseInt(formData.duration),
-        guestCount: parseInt(formData.guestCount),
-        specialRequests: formData.specialRequests
-      };
-      if (!newBooking.userId) {
-        setLoading(false);
-        setErrors({ form: t('You must be logged in to create a booking.') });
-        return;
-      }
-      bookingService
-        .createBooking(newBooking)
-        .then(() => {
-          navigate('/my-bookings', {
-            state: { message: t('Booking created successfully! Waiting for admin approval.') }
+      if (editBooking) {
+        const updateData = {
+          eventTypeId: parseInt(formData.eventType),
+          eventDate: formData.eventDate,
+          startTime: formData.startTime,
+          duration: parseInt(formData.duration),
+          guestCount: parseInt(formData.guestCount),
+          specialRequests: formData.specialRequests,
+          customMenu: customMenu.join(', ')
+        };
+        bookingService
+          .updateBooking(editBooking.id, updateData)
+          .then(() => {
+            navigate('/my-bookings', {
+              state: { message: t('Booking updated successfully!') }
+            });
+          })
+          .catch((err: any) => {
+            setErrors({
+              form:
+                err?.response?.data?.message ??
+                t('Could not update booking right now. Please try again.')
+            });
+            setLoading(false);
           });
-        })
-        .catch((err: any) => {
-          setErrors({
-            form:
-              err?.message ??
-              t('Could not create booking right now. Please try again.')
-          });
+      } else {
+        const newBooking = {
+          userId: parseInt(user?.id ?? '0'),
+          eventTypeId: parseInt(formData.eventType),
+          eventDate: formData.eventDate,
+          startTime: formData.startTime,
+          duration: parseInt(formData.duration),
+          guestCount: parseInt(formData.guestCount),
+          specialRequests: formData.specialRequests,
+          customMenu: customMenu.join(', ')
+        };
+        if (!newBooking.userId) {
           setLoading(false);
-        });
+          setErrors({ form: t('You must be logged in to create a booking.') });
+          return;
+        }
+        bookingService
+          .createBooking(newBooking as any)
+          .then(() => {
+            navigate('/my-bookings', {
+              state: { message: t('Booking created successfully! Waiting for admin approval.') }
+            });
+          })
+          .catch((err: any) => {
+            setErrors({
+              form:
+                err?.response?.data?.message ??
+                t('Could not create booking right now. Please try again.')
+            });
+            setLoading(false);
+          });
+      }
     }, 500);
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-20">
       <section>
         <h1 className="text-3xl font-semibold text-slate-50 sm:text-4xl">
-          {t('Book Your Event')}
+          {editBooking ? t('Edit Your Booking') : t('Book Your Event')}
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-slate-300">
-          {t('Fill out the form below to request a booking. Our team will review your request and confirm availability within 24 hours.')}
+          {editBooking 
+            ? t('Update the details of your pending booking below.')
+            : t('Fill out the form below to request a booking. Our team will review your request and confirm availability within 24 hours.')}
         </p>
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-        <Card title={t('Event Details')} subtitle={t('Tell us about your event')}>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {errors.form && (
-              <p className="rounded-lg border border-red-500/40 bg-red-900/20 px-3 py-2 text-xs text-red-300">
-                {errors.form}
-              </p>
-            )}
-            <div>
-              <label htmlFor="eventType" className="block text-sm font-medium text-slate-200 mb-1.5">
-                {t('Event Type')} *
-              </label>
-              <select
-                id="eventType"
-                value={formData.eventType}
-                onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
-                className="input w-full"
-              >
-                <option value="">{t('Select event type')}</option>
-                {eventTypes.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.name} - {t('Starting at')} ${type.basePrice.toLocaleString()}
-                  </option>
-                ))}
-              </select>
-              {errors.eventType && (
-                <p className="mt-1 text-xs text-red-400">{errors.eventType}</p>
+        <div className="space-y-6">
+          <Card title={t('Event Details')} subtitle={t('Tell us about your event')}>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {errors.form && (
+                <p className="rounded-lg border border-red-500/40 bg-red-900/20 px-3 py-2 text-xs text-red-300">
+                  {errors.form}
+                </p>
               )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="eventDate" className="block text-sm font-medium text-slate-200 mb-1.5">
-                  {t('Event Date')} *
-                </label>
-                <input
-                  id="eventDate"
-                  type="date"
-                  value={formData.eventDate}
-                  onChange={(e) => {
-                    setFormData({ ...formData, eventDate: e.target.value });
-                  }}
-                  className="input w-full"
-                  min={new Date().toISOString().split('T')[0]}
-                />
-                {errors.eventDate && (
-                  <p className="mt-1 text-xs text-red-400">{errors.eventDate}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="startTime" className="block text-sm font-medium text-slate-200 mb-1.5">
-                  {t('Start Time')} *
+                <label htmlFor="eventType" className="block text-sm font-medium text-slate-200 mb-1.5">
+                  {t('Event Type')} *
                 </label>
                 <select
-                  id="startTime"
-                  value={formData.startTime}
-                  onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                  id="eventType"
+                  value={formData.eventType}
+                  onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
                   className="input w-full"
                 >
-                  <option value="">{t('Select time')}</option>
-                  {timeSlots.map((time) => (
-                    <option key={time} value={time}>{time}</option>
+                  <option value="">{t('Select event type')}</option>
+                  {eventTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name} - {t('Starting at')} ${type.basePrice.toLocaleString()}
+                    </option>
                   ))}
                 </select>
-                {errors.startTime && (
-                  <p className="mt-1 text-xs text-red-400">{errors.startTime}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="duration" className="block text-sm font-medium text-slate-200 mb-1.5">
-                  {t('Duration')} *
-                </label>
-                <select
-                  id="duration"
-                  value={formData.duration}
-                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                  className="input w-full"
-                >
-                  <option value="">{t('Select duration')}</option>
-                  {durations.map((dur) => (
-                    <option key={dur.value} value={dur.value}>{dur.label}</option>
-                  ))}
-                </select>
-                {errors.duration && (
-                  <p className="mt-1 text-xs text-red-400">{errors.duration}</p>
+                {errors.eventType && (
+                  <p className="mt-1 text-xs text-red-400">{errors.eventType}</p>
                 )}
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="eventDate" className="block text-sm font-medium text-slate-200 mb-1.5">
+                    {t('Event Date')} *
+                  </label>
+                  <input
+                    id="eventDate"
+                    type="date"
+                    value={formData.eventDate}
+                    onChange={(e) => {
+                      setFormData({ ...formData, eventDate: e.target.value });
+                    }}
+                    className="input w-full"
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                  {errors.eventDate && (
+                    <p className="mt-1 text-xs text-red-400">{errors.eventDate}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="startTime" className="block text-sm font-medium text-slate-200 mb-1.5">
+                    {t('Start Time')} *
+                  </label>
+                  <select
+                    id="startTime"
+                    value={formData.startTime}
+                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                    className="input w-full"
+                  >
+                    <option value="">{t('Select time')}</option>
+                    {timeSlots.map((time) => (
+                      <option key={time} value={time}>{time}</option>
+                    ))}
+                  </select>
+                  {errors.startTime && (
+                    <p className="mt-1 text-xs text-red-400">{errors.startTime}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="duration" className="block text-sm font-medium text-slate-200 mb-1.5">
+                    {t('Duration')} *
+                  </label>
+                  <select
+                    id="duration"
+                    value={formData.duration}
+                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                    className="input w-full"
+                  >
+                    <option value="">{t('Select duration')}</option>
+                    {durations.map((dur) => (
+                      <option key={dur.value} value={dur.value}>{dur.label}</option>
+                    ))}
+                  </select>
+                  {errors.duration && (
+                    <p className="mt-1 text-xs text-red-400">{errors.duration}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="guestCount" className="block text-sm font-medium text-slate-200 mb-1.5">
+                    {t('Guest Count')} *
+                  </label>
+                  <input
+                    id="guestCount"
+                    type="number"
+                    value={formData.guestCount}
+                    onChange={(e) => setFormData({ ...formData, guestCount: e.target.value })}
+                    className="input w-full"
+                    placeholder="50"
+                    min="1"
+                    max={selectedEventType?.maxCapacity || 1000}
+                  />
+                  {errors.guestCount && (
+                    <p className="mt-1 text-xs text-red-400">{errors.guestCount}</p>
+                  )}
+                  {selectedEventType && (
+                    <p className="mt-1 text-xs text-slate-400">
+                      {t('Max capacity')}: {selectedEventType.maxCapacity} {t('guests')}
+                    </p>
+                  )}
+                </div>
+              </div>
+
               <div>
-                <label htmlFor="guestCount" className="block text-sm font-medium text-slate-200 mb-1.5">
-                  {t('Guest Count')} *
+                <label htmlFor="specialRequests" className="block text-sm font-medium text-slate-200 mb-1.5">
+                  {t('Special Requests (Optional)')}
                 </label>
-                <input
-                  id="guestCount"
-                  type="number"
-                  value={formData.guestCount}
-                  onChange={(e) => setFormData({ ...formData, guestCount: e.target.value })}
+                <textarea
+                  id="specialRequests"
+                  value={formData.specialRequests}
+                  onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}
                   className="input w-full"
-                  placeholder="50"
-                  min="1"
-                  max={selectedEventType?.maxCapacity || 200}
+                  rows={4}
+                  placeholder={t('Any special requirements, dietary restrictions, accessibility needs, etc.')}
                 />
-                {errors.guestCount && (
-                  <p className="mt-1 text-xs text-red-400">{errors.guestCount}</p>
-                )}
-                {selectedEventType && (
-                  <p className="mt-1 text-xs text-slate-400">
-                    {t('Max capacity')}: {selectedEventType.maxCapacity} {t('guests')}
-                  </p>
+              </div>
+
+              <div className="pt-4 border-t border-slate-700">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  className="w-full justify-between"
+                  onClick={() => setShowMenuCustomizer(!showMenuCustomizer)}
+                >
+                  <span className="flex items-center">
+                    🍴 {t('Customize Menu')}
+                    {customMenu.length > 0 && (
+                      <span className="ml-2 rounded-full bg-brand-500/20 px-2 py-0.5 text-xs text-brand-400 font-semibold">
+                        {customMenu.length} {t('items')}
+                      </span>
+                    )}
+                  </span>
+                  <span>{showMenuCustomizer ? '−' : '+'}</span>
+                </Button>
+
+                {showMenuCustomizer && (
+                  <div className="mt-4 p-4 rounded-xl bg-slate-900/50 border border-slate-700 space-y-4">
+                    <p className="text-xs text-slate-400">
+                      {t('Select or deselect dishes to customize your catering package.')}
+                    </p>
+                    <div className="max-h-60 overflow-y-auto pr-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {allDishes.map((dish) => (
+                        <label key={dish} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-slate-800 transition cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            className="mt-1 rounded border-slate-700 bg-slate-800 text-brand-500 focus:ring-brand-500"
+                            checked={customMenu.includes(dish)}
+                            onChange={() => toggleMenuItem(dish)}
+                          />
+                          <span className="text-xs text-slate-300">{dish}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="specialRequests" className="block text-sm font-medium text-slate-200 mb-1.5">
-                {t('Special Requests (Optional)')}
-              </label>
-              <textarea
-                id="specialRequests"
-                value={formData.specialRequests}
-                onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}
-                className="input w-full"
-                rows={4}
-                placeholder={t('Any special requirements, dietary restrictions, accessibility needs, etc.')}
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <Button 
-                type="submit" 
-                variant="primary" 
-                size="lg"
-                loading={loading}
-              >
-                {t('Submit Booking Request')}
-              </Button>
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="lg"
-                onClick={() => navigate('/services')}
-              >
-                {t('Cancel')}
-              </Button>
-            </div>
-          </form>
-        </Card>
+              <div className="flex gap-3">
+                <Button 
+                  type="submit" 
+                  variant="primary" 
+                  size="lg"
+                  loading={loading}
+                >
+                  {editBooking ? t('Update Booking') : t('Submit Booking Request')}
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="lg"
+                  onClick={() => navigate(editBooking ? '/my-bookings' : '/services')}
+                >
+                  {t('Cancel')}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
 
         <div className="space-y-6">
           <Card title={t('Booking Summary')} className="border-brand-500/40">
@@ -322,6 +432,17 @@ export const BookingPage = () => {
                   <div className="flex justify-between">
                     <span className="text-slate-400">{t('Guests')}:</span>
                     <span className="text-slate-100">{formData.guestCount} {t('people')}</span>
+                  </div>
+                )}
+
+                {customMenu.length > 0 && (
+                  <div className="pt-2 border-t border-slate-800">
+                    <p className="text-xs font-semibold text-slate-300 mb-1">{t('Custom Menu')}:</p>
+                    <p className="text-[11px] text-slate-400 italic">
+                      {customMenu.length > 5 
+                        ? `${customMenu.slice(0, 5).join(', ')} ... + ${customMenu.length - 5} more` 
+                        : customMenu.join(', ')}
+                    </p>
                   </div>
                 )}
                 
@@ -359,3 +480,4 @@ export const BookingPage = () => {
     </div>
   );
 };
+

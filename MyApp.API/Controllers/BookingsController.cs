@@ -103,7 +103,8 @@ public class BookingsController : ControllerBase
                 StartTime = startTime,
                 Duration = dto.Duration,
                 GuestCount = dto.GuestCount,
-                SpecialRequests = dto.SpecialRequests
+                SpecialRequests = dto.SpecialRequests,
+                CustomMenu = dto.CustomMenu
             };
 
             var bookingAction = _businessLogic.BookingAction();
@@ -149,6 +150,11 @@ public class BookingsController : ControllerBase
                 return Forbid();
             }
 
+            if (!isAdmin && existing.Status != "pending")
+            {
+                return BadRequest(new { message = "Only pending bookings can be edited. Contact an administrator to change a confirmed booking." });
+            }
+
             var entity = new Booking
             {
                 Id = id,
@@ -158,7 +164,8 @@ public class BookingsController : ControllerBase
                 StartTime = startTime,
                 Duration = dto.Duration,
                 GuestCount = dto.GuestCount,
-                SpecialRequests = dto.SpecialRequests
+                SpecialRequests = dto.SpecialRequests,
+                CustomMenu = dto.CustomMenu
             };
 
             var updated = await bookingAction.UpdateBookingActionAsync(entity, cancellationToken);

@@ -10,8 +10,6 @@ public interface IBusinessLogic
 {
     IAuthAction AuthAction();
     IUserAction UserAction();
-    IProjectAction ProjectAction();
-    ITaskItemAction TaskItemAction();
     IEventTypeAction EventTypeAction();
     IBookingAction BookingAction();
 }
