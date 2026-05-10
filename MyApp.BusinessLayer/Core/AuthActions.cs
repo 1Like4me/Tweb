@@ -35,10 +35,6 @@ public class AuthActions
         var user = new User
         {
             Username = dto.Username,
-            Email = string.IsNullOrWhiteSpace(dto.Email) ? dto.Username : dto.Email,
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            PhoneNumber = dto.PhoneNumber,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Role = dto.Username.Equals("admin@venue.com", StringComparison.OrdinalIgnoreCase)
                 ? UserRole.Admin
@@ -89,9 +85,10 @@ public class AuthActions
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim("userId", user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.Username),
+            new Claim("username", user.Username),
             new Claim(ClaimTypes.Email, string.IsNullOrWhiteSpace(user.Email) ? user.Username : user.Email),
             new Claim("email", string.IsNullOrWhiteSpace(user.Email) ? user.Username : user.Email),
-            new Claim("username", user.Username),
             new Claim(ClaimTypes.Role, user.Role.ToString()),
             new Claim("role", user.Role.ToString())
         };

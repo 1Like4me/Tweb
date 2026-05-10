@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Scrollbar for Chat */
+.chat-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-scrollbar::-webkit-scrollbar-track {
+  background: #1f2937; /* gray-800 */
+  border-radius: 4px;
+}
+.chat-scrollbar::-webkit-scrollbar-thumb {
+  background: #c98c1a; /* brand-500 */
+  border-radius: 4px;
+}
+.chat-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #e4a633; /* brand-400 */
+}
+
 :root {
   /* Dark neumorphic design tokens */
   --neu-bg: #05060b;
