@@ -7,6 +7,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ApiProvider } from './context/ApiContext';
 import { ToastProvider } from './context/ToastContext';
 import { I18nProvider } from './i18n/i18n';
+import { ChatProvider } from './context/ChatContext';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
@@ -15,7 +16,9 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
         <I18nProvider>
           <AuthProvider>
             <ToastProvider>
-              <App />
+              <ChatProvider>
+                <App />
+              </ChatProvider>
             </ToastProvider>
           </AuthProvider>
         </I18nProvider>

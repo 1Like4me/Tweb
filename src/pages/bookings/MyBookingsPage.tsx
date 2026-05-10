@@ -5,6 +5,7 @@ import { Button } from '../../components/common/Button';
 import { Booking } from '../../types/models';
 import { useAuth } from '../../hooks/useAuth';
 import { bookingService } from '../../services/bookingService';
+import { Modal } from '../../components/common/Modal';
 
 export const MyBookingsPage = () => {
   const location = useLocation();
@@ -13,6 +14,9 @@ export const MyBookingsPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('all');
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Modal State
+  const [cancelBookingId, setCancelBookingId] = useState<string | null>(null);
 
   useEffect(() => {
     // Show success message if navigated from booking page
@@ -36,14 +40,18 @@ export const MyBookingsPage = () => {
   };
 
   const handleCancelBooking = (bookingId: string) => {
-    if (!confirm('Are you sure you want to cancel this booking?')) {
-      return;
-    }
+    setCancelBookingId(bookingId);
+  };
 
+  const confirmCancelBooking = () => {
+    if (!cancelBookingId) return;
     bookingService
-      .changeBookingStatus(bookingId, 'cancelled')
-      .then(() => loadBookings())
-      .catch(() => undefined);
+      .changeBookingStatus(cancelBookingId, 'cancelled')
+      .then(() => {
+        loadBookings();
+        setCancelBookingId(null);
+      })
+      .catch(() => setCancelBookingId(null));
   };
 
   const getStatusColor = (status: string) => {
@@ -214,6 +222,17 @@ export const MyBookingsPage = () => {
           </div>
         )}
       </Card>
+
+      <Modal
+        isOpen={cancelBookingId !== null}
+        title="Cancel Booking"
+        onCancel={() => setCancelBookingId(null)}
+        onConfirm={confirmCancelBooking}
+        confirmLabel="Cancel Booking"
+        variant="danger"
+      >
+        Are you sure you want to cancel this booking? This action will set the status to "cancelled".
+      </Modal>
     </div>
   );
 };

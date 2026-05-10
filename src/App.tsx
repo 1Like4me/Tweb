@@ -8,7 +8,6 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { BookingPage } from './pages/bookings/BookingPage';
 import { UserDashboardPage } from './pages/user/UserDashboardPage';
-import { EditProfilePage } from './pages/user/EditProfilePage';
 import { MyBookingsPage } from './pages/bookings/MyBookingsPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { UnauthorizedPage } from './pages/errors/UnauthorizedPage';
@@ -18,6 +17,8 @@ import { ServerErrorPage } from './pages/errors/ServerErrorPage';
 import { HealthPage } from './pages/HealthPage';
 import { RequireAuth } from './components/layout/RequireAuth';
 import { RequireAdmin } from './components/layout/RequireAdmin';
+import { TestChatPage } from './pages/TestChatPage';
+import { AccountPickerPage } from './pages/auth/AccountPickerPage';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/accounts" element={<AccountPickerPage />} />
 
         <Route
           path="/booking"
@@ -44,14 +46,6 @@ function App() {
           element={
             <RequireAuth>
               <UserDashboardPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <RequireAuth>
-              <EditProfilePage />
             </RequireAuth>
           }
         />
@@ -78,13 +72,13 @@ function App() {
         <Route path="/500" element={<ServerErrorPage />} />
 
         <Route path="/error" element={<ServerErrorPage />} />
-        <Route path="/health" element={<HealthPage />} />
+        <Route path="/test-chat" element={<TestChatPage />} />
 
         <Route path="/not-found" element={<NotFoundPage />} />
         <Route path="*" element={<Navigate to="/not-found" replace />} />
-      </Route>
-    </Routes>
-  );
-}
+        </Route>
+        </Routes>
+        );
+        }
 
-export default App;
+        export default App;

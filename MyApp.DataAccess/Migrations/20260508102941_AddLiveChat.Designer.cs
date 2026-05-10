@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyApp.DataAccess;
 
@@ -10,20 +11,25 @@ using MyApp.DataAccess;
 namespace MyApp.DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260508102941_AddLiveChat")]
+    partial class AddLiveChat
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.23");
 
-            modelBuilder.Entity("MyApp.Domain.Booking", b =>
+            modelBuilder.Entity("MyApp.Domain.Entities.Booking", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomMenu")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Duration")
@@ -145,7 +151,7 @@ namespace MyApp.DataAccess.Migrations
                     b.ToTable("EventTypes");
                 });
 
-            modelBuilder.Entity("MyApp.Domain.HealthCheckEntry", b =>
+            modelBuilder.Entity("MyApp.Domain.Entities.HealthCheckEntry", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -162,7 +168,7 @@ namespace MyApp.DataAccess.Migrations
                     b.ToTable("HealthChecks");
                 });
 
-            modelBuilder.Entity("MyApp.Domain.Project", b =>
+            modelBuilder.Entity("MyApp.Domain.Entities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -171,54 +177,33 @@ namespace MyApp.DataAccess.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Projects");
-                });
-
-            modelBuilder.Entity("MyApp.Domain.TaskItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<string>("EmailVerificationCode")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ProjectId")
+                    b.Property<bool>("IsEmailVerified")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("Tasks");
-                });
-
-            modelBuilder.Entity("MyApp.Domain.User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<string>("LastName")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProfilePictureUrl")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Role")
@@ -233,15 +218,15 @@ namespace MyApp.DataAccess.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("MyApp.Domain.Booking", b =>
+            modelBuilder.Entity("MyApp.Domain.Entities.Booking", b =>
                 {
-                    b.HasOne("MyApp.Domain.EventType", "EventType")
+                    b.HasOne("MyApp.Domain.Entities.EventType", "EventType")
                         .WithMany("Bookings")
                         .HasForeignKey("EventTypeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("MyApp.Domain.User", "User")
+                    b.HasOne("MyApp.Domain.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -297,16 +282,6 @@ namespace MyApp.DataAccess.Migrations
             modelBuilder.Entity("MyApp.Domain.Entities.EventType", b =>
                 {
                     b.Navigation("Bookings");
-                });
-
-            modelBuilder.Entity("MyApp.Domain.Project", b =>
-                {
-                    b.Navigation("Tasks");
-                });
-
-            modelBuilder.Entity("MyApp.Domain.User", b =>
-                {
-                    b.Navigation("Projects");
                 });
 #pragma warning restore 612, 618
         }
