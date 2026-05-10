@@ -4,13 +4,19 @@ import { Button } from '../../components/common/Button';
 import { Booking, User } from '../../types/models';
 import { bookingService } from '../../services/bookingService';
 import { userService } from '../../services/userService';
+import { AdminChatDashboard } from '../../components/chat/AdminChatDashboard';
+import { Modal } from '../../components/common/Modal';
 
 export const AdminDashboardPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [activeTab, setActiveTab] = useState<'bookings' | 'users'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'users' | 'chat'>('bookings');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('all');
+
+  // Modal States
+  const [deleteBookingId, setDeleteBookingId] = useState<string | null>(null);
+  const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -36,21 +42,33 @@ export const AdminDashboardPage = () => {
   };
 
   const handleDeleteBooking = (bookingId: string) => {
-    if (!confirm('Are you sure you want to delete this booking?')) return;
-    
+    setDeleteBookingId(bookingId);
+  };
+
+  const confirmDeleteBooking = () => {
+    if (!deleteBookingId) return;
     bookingService
-      .deleteBooking(bookingId)
-      .then(() => loadData())
-      .catch(() => undefined);
+      .deleteBooking(deleteBookingId)
+      .then(() => {
+        loadData();
+        setDeleteBookingId(null);
+      })
+      .catch(() => setDeleteBookingId(null));
   };
 
   const handleDeleteUser = (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user? All their bookings will remain.')) return;
-    
+    setDeleteUserId(userId);
+  };
+
+  const confirmDeleteUser = () => {
+    if (!deleteUserId) return;
     userService
-      .deleteUser(userId)
-      .then(() => loadData())
-      .catch(() => undefined);
+      .deleteUser(deleteUserId)
+      .then(() => {
+        loadData();
+        setDeleteUserId(null);
+      })
+      .catch(() => setDeleteUserId(null));
   };
 
   const getUserById = (userId: string) => {
@@ -143,35 +161,47 @@ export const AdminDashboardPage = () => {
           >
             Users ({users.length})
           </button>
+          <button
+            onClick={() => setActiveTab('chat')}
+            className={`pb-3 px-4 text-sm font-medium transition border-b-2 ${
+              activeTab === 'chat'
+                ? 'border-brand-500 text-brand-400'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Live Chat
+          </button>
         </div>
 
-        <div className="mb-4 flex flex-wrap gap-3">
-          <input
-            type="text"
-            placeholder={activeTab === 'bookings' ? 'Search by event type or user email...' : 'Search by name or email...'}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="input flex-1 min-w-[200px]"
-          />
+        {activeTab !== 'chat' && (
+          <div className="mb-4 flex flex-wrap gap-3">
+            <input
+              type="text"
+              placeholder={activeTab === 'bookings' ? 'Search by event type or user email...' : 'Search by name or email...'}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input flex-1 min-w-[200px]"
+            />
 
-          {activeTab === 'bookings' && (
-            <div className="flex gap-2">
-              {(['all', 'pending', 'confirmed', 'cancelled'] as const).map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
-                  className={`px-3 py-1.5 text-xs rounded-lg transition capitalize ${
-                    statusFilter === status
-                      ? 'bg-brand-500 text-slate-950 font-medium'
-                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+            {activeTab === 'bookings' && (
+              <div className="flex gap-2">
+                {(['all', 'pending', 'confirmed', 'cancelled'] as const).map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => setStatusFilter(status)}
+                    className={`px-3 py-1.5 text-xs rounded-lg transition capitalize ${
+                      statusFilter === status
+                        ? 'bg-brand-500 text-slate-950 font-medium'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    {status}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {activeTab === 'bookings' ? (
           <div className="space-y-4">
@@ -262,7 +292,7 @@ export const AdminDashboardPage = () => {
               })
             )}
           </div>
-        ) : (
+        ) : activeTab === 'users' ? (
           <div className="overflow-x-auto">
             {filteredUsers.length === 0 ? (
               <p className="text-center py-12 text-slate-400">No users found</p>
@@ -313,8 +343,32 @@ export const AdminDashboardPage = () => {
               </table>
             )}
           </div>
+        ) : (
+          <AdminChatDashboard />
         )}
       </Card>
+
+      <Modal
+        isOpen={deleteBookingId !== null}
+        title="Delete Booking"
+        onCancel={() => setDeleteBookingId(null)}
+        onConfirm={confirmDeleteBooking}
+        confirmLabel="Delete"
+        variant="danger"
+      >
+        Are you sure you want to delete this booking? This action cannot be undone.
+      </Modal>
+
+      <Modal
+        isOpen={deleteUserId !== null}
+        title="Delete User"
+        onCancel={() => setDeleteUserId(null)}
+        onConfirm={confirmDeleteUser}
+        confirmLabel="Delete"
+        variant="danger"
+      >
+        Are you sure you want to delete this user? All their bookings will remain.
+      </Modal>
     </div>
   );
 };

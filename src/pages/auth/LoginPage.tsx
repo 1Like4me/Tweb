@@ -112,23 +112,6 @@ export const LoginPage = () => {
           </form>
 
           <div className="mt-6 space-y-4">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-700"></div>
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-slate-900 px-2 text-slate-400">Demo Credentials</span>
-              </div>
-            </div>
-
-            <div className="space-y-2 rounded-lg bg-slate-800/50 p-3 text-xs text-slate-300">
-              <p className="font-semibold text-slate-100">Test Accounts:</p>
-              <div className="space-y-1">
-                <p><span className="text-brand-400">Admin:</span> admin@venue.com / admin123</p>
-                <p><span className="text-brand-400">User:</span> user@venue.com / user123</p>
-              </div>
-            </div>
-
             <p className="text-center text-sm text-slate-400">
               Don't have an account?{' '}
               <Link to="/register" className="text-brand-400 hover:text-brand-300 font-medium">

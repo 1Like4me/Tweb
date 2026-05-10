@@ -85,9 +85,10 @@ public class AuthActions
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim("userId", user.Id.ToString()),
-            new Claim(ClaimTypes.Email, user.Username),
-            new Claim("email", user.Username),
+            new Claim(ClaimTypes.Name, user.Username),
             new Claim("username", user.Username),
+            new Claim(ClaimTypes.Email, string.IsNullOrWhiteSpace(user.Email) ? user.Username : user.Email),
+            new Claim("email", string.IsNullOrWhiteSpace(user.Email) ? user.Username : user.Email),
             new Claim(ClaimTypes.Role, user.Role.ToString()),
             new Claim("role", user.Role.ToString())
         };

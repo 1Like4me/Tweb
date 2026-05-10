@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
+import { ChatWidget } from '../chat/ChatWidget';
 
 export const MainLayout = () => {
   return (
@@ -10,6 +11,7 @@ export const MainLayout = () => {
           <Outlet />
         </div>
       </main>
+      <ChatWidget />
     </div>
   );
 };

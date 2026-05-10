@@ -29,13 +29,21 @@ const getSession = (): AuthSession | null => {
 
 const mapCurrentUser = (dto: UserApiDto): User => {
   const normalizedRole = dto.role.toLowerCase() === 'admin' ? 'admin' : 'user';
+  
+  // Ensure profilePictureUrl is absolute
+  let profilePictureUrl = dto.profilePictureUrl;
+  if (profilePictureUrl && !profilePictureUrl.startsWith('http')) {
+    profilePictureUrl = `http://localhost:5085${profilePictureUrl.startsWith('/') ? '' : '/'}${profilePictureUrl}`;
+  }
+
   return {
     id: String(dto.id),
     email: dto.username.trim().toLowerCase(),
     password: '',
-    firstName: normalizedRole === 'admin' ? 'Admin' : 'User',
-    lastName: 'Account',
-    phone: '',
+    firstName: dto.firstName,
+    lastName: dto.lastName,
+    phone: dto.phoneNumber,
+    profilePictureUrl: profilePictureUrl,
     role: normalizedRole,
     createdAt: dto.createdAt
   };

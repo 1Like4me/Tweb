@@ -17,6 +17,8 @@ import { ServerErrorPage } from './pages/errors/ServerErrorPage';
 import { HealthPage } from './pages/HealthPage';
 import { RequireAuth } from './components/layout/RequireAuth';
 import { RequireAdmin } from './components/layout/RequireAdmin';
+import { TestChatPage } from './pages/TestChatPage';
+import { AccountPickerPage } from './pages/auth/AccountPickerPage';
 
 function App() {
   return (
@@ -29,6 +31,7 @@ function App() {
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/accounts" element={<AccountPickerPage />} />
 
         <Route
           path="/booking"
@@ -69,14 +72,13 @@ function App() {
         <Route path="/500" element={<ServerErrorPage />} />
 
         <Route path="/error" element={<ServerErrorPage />} />
-        <Route path="/health" element={<HealthPage />} />
+        <Route path="/test-chat" element={<TestChatPage />} />
 
         <Route path="/not-found" element={<NotFoundPage />} />
         <Route path="*" element={<Navigate to="/not-found" replace />} />
-      </Route>
-    </Routes>
-  );
-}
+        </Route>
+        </Routes>
+        );
+        }
 
-export default App;
-
+        export default App;
